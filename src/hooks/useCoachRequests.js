@@ -54,27 +54,16 @@ export function useCoachRequests(userId) {
   }
 
   async function respondToRequest(requestId, memberId, accept) {
-    const status = accept ? 'accepted' : 'denied'
-
-    const { error: updateErr } = await supabase
-      .from('coach_requests')
-      .update({ status })
-      .eq('id', requestId)
-
-    if (updateErr) return { error: updateErr.message }
-
     if (accept) {
-      // Link member → this coach
-      await supabase
-        .from('profiles')
-        .update({ coach_id: userId, is_member: true })
-        .eq('user_id', memberId)
-
-      // Ensure current user is flagged as coach
-      await supabase
-        .from('profiles')
-        .update({ is_coach: true })
-        .eq('user_id', userId)
+      // Use SECURITY DEFINER RPC so it can update the member's profile row
+      const { error } = await supabase.rpc('accept_coach_request', { request_id: requestId })
+      if (error) return { error: error.message }
+    } else {
+      const { error } = await supabase
+        .from('coach_requests')
+        .update({ status: 'denied' })
+        .eq('id', requestId)
+      if (error) return { error: error.message }
     }
 
     await fetch()
