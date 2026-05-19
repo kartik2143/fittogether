@@ -76,7 +76,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+    <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src="/logo.svg" alt="FitTogether" className="w-14 h-14 mx-auto mb-3" />
