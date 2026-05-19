@@ -86,33 +86,55 @@ export default function ProfileView() {
   return (
     <div className="flex flex-col gap-5">
       {/* Back */}
-      <Link to="/profiles" className="text-sm text-brand-600 hover:underline">← All profiles</Link>
+      <Link to="/profiles" className="flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        All profiles
+      </Link>
 
       {/* Profile header */}
-      <Card className="p-5 flex items-center gap-4">
-        <Avatar src={profile.avatar_url} name={profile.display_name} size="xl" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg font-bold text-gray-900">{profile.display_name}</h1>
-            {isMyProfile && <span className="text-xs text-gray-400">(you)</span>}
+      <Card className="overflow-hidden">
+        <div className="bg-gradient-to-br from-brand-400 to-brand-600 h-20" />
+        <div className="px-5 pb-5 -mt-10 flex items-end gap-4">
+          <Avatar src={profile.avatar_url} name={profile.display_name} size="xl" className="ring-4 ring-white shadow-sm flex-shrink-0" />
+          <div className="pb-1 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-gray-900 truncate">{profile.display_name}</h1>
+              {isMyProfile && <span className="text-xs text-gray-400 font-medium">you</span>}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap mt-1">
+              {roles.map(r => <Badge key={r.label} variant={r.variant}>{r.label}</Badge>)}
+            </div>
           </div>
-          <div className="flex gap-1 mt-1 flex-wrap">
-            {roles.map(r => <Badge key={r.label} variant={r.variant}>{r.label}</Badge>)}
-          </div>
-          <div className="flex items-center gap-1 mt-2">
-            <span className="text-base">🔥</span>
-            <span className="text-sm font-bold text-orange-600">{streak} day streak</span>
-          </div>
+        </div>
+        <div className="flex items-center gap-1.5 px-5 pb-4 -mt-1">
+          <span className="text-base">🔥</span>
+          <span className="text-sm font-bold text-orange-600">{streak} day streak</span>
         </div>
       </Card>
 
       {/* Today's snapshot */}
       <Card className="p-4">
-        <p className="font-semibold text-gray-800 mb-3">Today's snapshot</p>
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <Stat label="Weight" value={healthLog?.weight_kg ? `${healthLog.weight_kg} kg` : '—'} />
-          <Stat label="Sleep" value={healthLog?.sleep_hours ? `${healthLog.sleep_hours}h` : '—'} />
-          <Stat label="Workout" value={wsStatus === 'yes' ? '✅ Done' : wsStatus === 'partial' ? '🟡 Partial' : wsStatus === 'planned' ? '📋 Planned' : '—'} />
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Today's Snapshot</p>
+        <div className="grid grid-cols-3 gap-2.5">
+          <MetricCard
+            label="Weight"
+            value={healthLog?.weight_kg ? healthLog.weight_kg : '—'}
+            unit={healthLog?.weight_kg ? 'kg' : undefined}
+            color="blue"
+          />
+          <MetricCard
+            label="Sleep"
+            value={healthLog?.sleep_hours ? healthLog.sleep_hours : '—'}
+            unit={healthLog?.sleep_hours ? 'hrs' : undefined}
+            color="purple"
+          />
+          <MetricCard
+            label="Workout"
+            value={wsStatus === 'yes' ? 'Done' : wsStatus === 'partial' ? 'Partial' : wsStatus === 'planned' ? 'Planned' : '—'}
+            color={wsStatus === 'yes' ? 'green' : wsStatus === 'partial' ? 'yellow' : 'gray'}
+          />
         </div>
         {healthLog?.activity_notes && (
           <p className="text-sm text-gray-500 mt-3 italic">"{healthLog.activity_notes}"</p>
@@ -121,28 +143,47 @@ export default function ProfileView() {
 
       {/* Weight trend */}
       <Card className="p-4">
-        <p className="font-semibold text-gray-800 mb-3">Weight trend (30 days)</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Weight (30 days)</p>
         <WeightChart logs={weightLogs} />
       </Card>
 
       {/* Coach actions */}
       {amTheirCoach && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1">Coach Actions</p>
           <Link to={`/health?for=${userId}`}>
-            <button className="w-full py-2.5 rounded-xl border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors">
-              📋 Log health
-            </button>
+            <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors">
+              <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold text-gray-800">Log Health</span>
+              <svg className="w-4 h-4 text-gray-300 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </Link>
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             <Link to={`/workout?for=${userId}`} className="flex-1">
-              <button className="w-full py-2.5 rounded-xl border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors">
-                💪 Write workout plan
-              </button>
+              <div className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                <div className="w-9 h-9 bg-brand-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-gray-700 text-center">Workout Plan</span>
+              </div>
             </Link>
             <Link to={`/diet?for=${userId}`} className="flex-1">
-              <button className="w-full py-2.5 rounded-xl border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors">
-                🥗 Write meal plan
-              </button>
+              <div className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                <div className="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-gray-700 text-center">Meal Plan</span>
+              </div>
             </Link>
           </div>
         </div>
@@ -151,11 +192,19 @@ export default function ProfileView() {
   )
 }
 
-function Stat({ label, value }) {
+function MetricCard({ label, value, unit, color }) {
+  const styles = {
+    blue:   'bg-blue-50 text-blue-700',
+    purple: 'bg-purple-50 text-purple-700',
+    green:  'bg-brand-50 text-brand-700',
+    yellow: 'bg-yellow-50 text-yellow-700',
+    gray:   'bg-gray-100 text-gray-500',
+  }
   return (
-    <div className="flex flex-col gap-0.5 py-2">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-sm font-semibold text-gray-800">{value}</p>
+    <div className={`${styles[color]} rounded-2xl p-3 flex flex-col gap-0.5`}>
+      <p className="text-xs font-medium opacity-60">{label}</p>
+      <p className="text-base font-bold leading-tight">{value}</p>
+      {unit && <p className="text-xs opacity-50">{unit}</p>}
     </div>
   )
 }

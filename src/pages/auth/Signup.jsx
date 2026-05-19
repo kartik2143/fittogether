@@ -4,7 +4,6 @@ import { supabase } from '../../lib/supabase'
 import { compressImage } from '../../utils/imageCompression'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
 import { Avatar } from '../../components/ui/Avatar'
 
 export default function Signup() {
@@ -79,53 +78,66 @@ export default function Signup() {
     <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="FitTogether" className="w-14 h-14 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
-          <p className="text-gray-500 text-sm mt-1">Join FitTogether</p>
+          <img src="/logo.svg" alt="FitTogether" className="w-16 h-16 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create account</h1>
+          <p className="text-gray-400 text-sm mt-1.5">Join FitTogether</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Avatar picker */}
           <div className="flex flex-col items-center gap-2">
             <button type="button" onClick={() => fileRef.current?.click()}>
-              <Avatar src={avatarPreview} name={displayName || '?'} size="xl" className="ring-2 ring-brand-100 hover:ring-brand-400 transition-all" />
+              <Avatar src={avatarPreview} name={displayName || '?'} size="xl" className="ring-4 ring-white shadow-md hover:shadow-lg transition-shadow" />
             </button>
-            <span className="text-xs text-gray-500">Tap to add photo (optional)</span>
+            <span className="text-xs text-gray-400">Tap to add photo (optional)</span>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </div>
 
-          <Input
-            label="Display name"
-            type="text"
-            value={displayName}
-            onChange={e => setDisplayName(e.target.value)}
-            placeholder="e.g. Kartik"
-            required
-            maxLength={40}
-          />
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-            autoComplete="email"
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Min. 6 characters"
-            required
-            autoComplete="new-password"
-          />
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 transition-colors cursor-text">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Display name</span>
+              <input
+                type="text"
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
+                placeholder="e.g. Kartik"
+                required
+                maxLength={40}
+                className="text-base text-gray-900 outline-none bg-transparent placeholder:text-gray-300"
+              />
+            </label>
+            <div className="h-px bg-gray-100 mx-4" />
+            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 transition-colors cursor-text">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                autoComplete="email"
+                className="text-base text-gray-900 outline-none bg-transparent placeholder:text-gray-300"
+              />
+            </label>
+            <div className="h-px bg-gray-100 mx-4" />
+            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 transition-colors cursor-text">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Min. 6 characters"
+                required
+                autoComplete="new-password"
+                className="text-base text-gray-900 outline-none bg-transparent placeholder:text-gray-300"
+              />
+            </label>
+          </div>
 
           {/* Role picker */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">I am a…</label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">I am a…</p>
+            <div className="grid grid-cols-2 gap-2.5">
               {[
                 { value: 'member', emoji: '🏃', label: 'Member', desc: 'I log my own data' },
                 { value: 'coach', emoji: '🧑‍💼', label: 'Coach', desc: 'I write plans for others' },
@@ -135,26 +147,26 @@ export default function Signup() {
                   type="button"
                   onClick={() => setRole(value)}
                   className={`
-                    flex flex-col items-center gap-1 p-3 rounded-xl border-2 text-sm transition-colors
+                    flex flex-col items-center gap-1.5 p-4 rounded-2xl border-2 text-sm transition-all
                     ${role === value
-                      ? 'border-brand-500 bg-brand-50 text-brand-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                     }
                   `}
                 >
-                  <span className="text-2xl">{emoji}</span>
-                  <span className="font-medium">{label}</span>
-                  <span className="text-xs text-center text-gray-400">{desc}</span>
+                  <span className="text-3xl">{emoji}</span>
+                  <span className="font-semibold">{label}</span>
+                  <span className="text-xs text-center text-gray-400 leading-tight">{desc}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>
           )}
 
-          <Button type="submit" size="lg" loading={loading} className="w-full mt-1">
+          <Button type="submit" size="lg" loading={loading} className="w-full">
             Create account
           </Button>
         </form>
