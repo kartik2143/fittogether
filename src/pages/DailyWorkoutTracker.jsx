@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
 
 const SECTIONS = [
   { key: 'warmup',   label: 'Warm-up',     emoji: '🔥' },
@@ -7,6 +8,7 @@ const SECTIONS = [
 ]
 
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
 import { WorkoutPlanForm } from '../components/workout/WorkoutPlanForm'
 import { WorkoutLogForm } from '../components/workout/WorkoutLogForm'
@@ -27,7 +29,19 @@ const completedConfig = {
 
 export default function DailyWorkoutTracker() {
   const { profile } = useAuth()
-  const { plan, exercises, log, loading, refetch } = useWorkoutPlan(profile?.user_id, today)
+  const [searchParams] = useSearchParams()
+  const forId = searchParams.get('for')
+  const isCoachMode = !!forId && forId !== profile?.user_id
+  const targetUserId = isCoachMode ? forId : profile?.user_id
+  const [memberName, setMemberName] = useState('')
+
+  useEffect(() => {
+    if (!isCoachMode) return
+    supabase.from('profiles').select('display_name').eq('user_id', forId).single()
+      .then(({ data }) => setMemberName(data?.display_name || 'Member'))
+  }, [forId, isCoachMode])
+
+  const { plan, exercises, log, loading, refetch } = useWorkoutPlan(targetUserId, today)
   const [editingPlan, setEditingPlan] = useState(false)
   const [editingLog, setEditingLog] = useState(false)
 
@@ -56,7 +70,14 @@ export default function DailyWorkoutTracker() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold text-gray-900">💪 Today's Workout</h1>
+      {isCoachMode && (
+        <Link to={`/profiles/${forId}`} className="text-sm text-brand-600 hover:underline">
+          ← Back to {memberName}'s profile
+        </Link>
+      )}
+      <h1 className="text-xl font-bold text-gray-900">
+        💪 {isCoachMode ? `${memberName}'s Workout` : "Today's Workout"}
+      </h1>
 
       {/* Plan section */}
       <Card className="p-4">
@@ -72,7 +93,7 @@ export default function DailyWorkoutTracker() {
         {canCreatePlan ? (
           <WorkoutPlanForm
             createdBy={profile?.user_id}
-            forUserId={profile?.user_id}
+            forUserId={targetUserId}
             date={today}
             existing={editingPlan ? plan : undefined}
             existingExercises={editingPlan ? exercises : undefined}
@@ -122,8 +143,8 @@ export default function DailyWorkoutTracker() {
         )}
       </Card>
 
-      {/* Log section */}
-      {plan && (
+      {/* Log section — hidden in coach mode, member logs their own */}
+      {plan && !isCoachMode && (
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <p className="font-semibold text-gray-800">Your log</p>
