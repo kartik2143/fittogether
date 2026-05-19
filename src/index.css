@@ -5,14 +5,25 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    /* Apple-style font smoothing */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    /* Apple system grouped background — slightly cool gray, not pure white */
+    background-color: #F2F2F7;
+    @apply text-gray-900 font-sans;
   }
 }
 
 @layer utilities {
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Frosted glass — Apple nav bar style */
+  .glass {
+    background: rgba(255, 255, 255, 0.88);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
   }
 }

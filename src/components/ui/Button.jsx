@@ -1,14 +1,14 @@
 const variants = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800',
-  secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 active:bg-gray-100',
-  danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
-  ghost: 'text-gray-600 hover:bg-gray-100 active:bg-gray-200',
+  primary:   'bg-brand-600 text-white active:bg-brand-700 shadow-sm',
+  secondary: 'bg-[#F2F2F7] text-gray-800 active:bg-[#E5E5EA]',
+  danger:    'bg-red-500 text-white active:bg-red-600 shadow-sm',
+  ghost:     'text-brand-600 active:bg-brand-50',
 }
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-5 py-3 text-base',
+  sm: 'px-3 py-1.5 text-footnote rounded-apple',
+  md: 'px-4 py-2   text-subhead rounded-apple',
+  lg: 'px-5 py-3.5 text-callout  rounded-apple-lg font-semibold tracking-tight',
 }
 
 export function Button({ children, variant = 'primary', size = 'md', className = '', disabled, loading, ...props }) {
@@ -17,9 +17,10 @@ export function Button({ children, variant = 'primary', size = 'md', className =
       {...props}
       disabled={disabled || loading}
       className={`
-        inline-flex items-center justify-center gap-2 font-medium rounded-xl
-        transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500
-        disabled:opacity-50 disabled:cursor-not-allowed
+        inline-flex items-center justify-center gap-2 font-medium
+        transition-all duration-100 active:scale-[0.98]
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500
+        disabled:opacity-40 disabled:cursor-not-allowed
         ${variants[variant]} ${sizes[size]} ${className}
       `}
     >
