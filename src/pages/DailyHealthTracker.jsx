@@ -4,11 +4,10 @@ import { useAuth } from '../contexts/AuthContext'
 import { useHealthLogs, useTodayHealthLog } from '../hooks/useHealthLogs'
 import { HealthLogForm } from '../components/health/HealthLogForm'
 import { HealthLogEntry } from '../components/health/HealthLogEntry'
+import { DateNavigator } from '../components/ui/DateNavigator'
 import { Card } from '../components/ui/Card'
 import { supabase } from '../lib/supabase'
 import { todayStr } from '../utils/dateUtils'
-
-const today = todayStr()
 
 export default function DailyHealthTracker() {
   const { profile } = useAuth()
@@ -17,12 +16,16 @@ export default function DailyHealthTracker() {
   const isCoachMode = !!forId && forId !== profile?.user_id
   const targetUserId = isCoachMode ? forId : profile?.user_id
 
+  const [selectedDate, setSelectedDate] = useState(todayStr())
   const [memberName, setMemberName] = useState('')
   const [supplements, setSupplements] = useState([])
   const [editing, setEditing] = useState(false)
 
-  const { log: todayLog, loading: todayLoading, refetch: refetchToday } = useTodayHealthLog(targetUserId, today)
+  const { log: todayLog, loading: todayLoading, refetch: refetchToday } = useTodayHealthLog(targetUserId, selectedDate)
   const { logs, loading: histLoading, refetch: refetchHist } = useHealthLogs(targetUserId, 60)
+
+  // Reset editing state when date changes
+  useEffect(() => { setEditing(false) }, [selectedDate])
 
   useEffect(() => {
     if (!targetUserId) return
@@ -45,7 +48,7 @@ export default function DailyHealthTracker() {
     setEditing(false)
   }
 
-  const pastLogs = logs.filter(l => l.date !== today)
+  const pastLogs = logs.filter(l => l.date !== selectedDate)
 
   return (
     <div className="flex flex-col gap-5">
@@ -58,9 +61,13 @@ export default function DailyHealthTracker() {
         📋 {isCoachMode ? `${memberName}'s Health Log` : 'Daily Health Log'}
       </h1>
 
+      <DateNavigator date={selectedDate} onChange={setSelectedDate} disableFuture />
+
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <p className="font-semibold text-gray-800">Today</p>
+          <p className="font-semibold text-gray-800">
+            {selectedDate === todayStr() ? 'Today' : selectedDate}
+          </p>
           {todayLog && !editing && (
             <button
               onClick={() => setEditing(true)}
@@ -76,7 +83,7 @@ export default function DailyHealthTracker() {
         ) : (!todayLog || editing) ? (
           <HealthLogForm
             userId={targetUserId}
-            date={today}
+            date={selectedDate}
             existing={editing ? todayLog : undefined}
             supplements={supplements}
             onSaved={handleSaved}
@@ -86,7 +93,6 @@ export default function DailyHealthTracker() {
         )}
       </Card>
 
-      {/* Past entries */}
       {pastLogs.length > 0 && (
         <div className="flex flex-col gap-3">
           <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Past entries</h2>

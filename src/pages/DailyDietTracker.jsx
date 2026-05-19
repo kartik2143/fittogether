@@ -6,10 +6,10 @@ import { useMealPlan } from '../hooks/useMealPlan'
 import { MealPlanForm } from '../components/diet/MealPlanForm'
 import { MealLogForm } from '../components/diet/MealLogForm'
 import { MealSlot } from '../components/diet/MealSlot'
+import { DateNavigator } from '../components/ui/DateNavigator'
 import { Card } from '../components/ui/Card'
 import { todayStr } from '../utils/dateUtils'
 
-const today = todayStr()
 const MEALS = [
   { key: 'breakfast', label: 'Breakfast', emoji: '🍳' },
   { key: 'lunch',     label: 'Lunch',     emoji: '🥗' },
@@ -23,7 +23,14 @@ export default function DailyDietTracker() {
   const forId = searchParams.get('for')
   const isCoachMode = !!forId && forId !== profile?.user_id
   const targetUserId = isCoachMode ? forId : profile?.user_id
+
+  const [selectedDate, setSelectedDate] = useState(todayStr())
   const [memberName, setMemberName] = useState('')
+  const [editingPlan, setEditingPlan] = useState(false)
+  const [editingLog, setEditingLog] = useState(false)
+
+  // Reset editing when date changes
+  useEffect(() => { setEditingPlan(false); setEditingLog(false) }, [selectedDate])
 
   useEffect(() => {
     if (!isCoachMode) return
@@ -31,17 +38,18 @@ export default function DailyDietTracker() {
       .then(({ data }) => setMemberName(data?.display_name || 'Member'))
   }, [forId, isCoachMode])
 
-  const { plan, log, loading, refetch } = useMealPlan(targetUserId, today)
-  const [editingPlan, setEditingPlan] = useState(false)
-  const [editingLog, setEditingLog] = useState(false)
+  const { plan, log, loading, refetch } = useMealPlan(targetUserId, selectedDate)
+
+  const isFuture = selectedDate > todayStr()
 
   async function handlePlanSaved() { await refetch(); setEditingPlan(false) }
-  async function handleLogSaved() { await refetch(); setEditingLog(false) }
+  async function handleLogSaved()  { await refetch(); setEditingLog(false) }
 
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-12 bg-white rounded-2xl border border-gray-100 animate-pulse" />
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-white rounded-2xl border border-gray-100 animate-pulse" />)}
       </div>
     )
@@ -58,6 +66,8 @@ export default function DailyDietTracker() {
         🥗 {isCoachMode ? `${memberName}'s Diet` : "Today's Diet"}
       </h1>
 
+      <DateNavigator date={selectedDate} onChange={setSelectedDate} />
+
       {/* Plan section */}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
@@ -73,7 +83,7 @@ export default function DailyDietTracker() {
           <MealPlanForm
             createdBy={profile?.user_id}
             forUserId={targetUserId}
-            date={today}
+            date={selectedDate}
             existing={editingPlan ? plan : undefined}
             onSaved={handlePlanSaved}
           />
@@ -95,8 +105,8 @@ export default function DailyDietTracker() {
         )}
       </Card>
 
-      {/* Log section — hidden in coach mode, member logs their own */}
-      {!isCoachMode && (
+      {/* Log section — hidden for coach mode and future dates */}
+      {!isCoachMode && !isFuture && (
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <p className="font-semibold text-gray-800">Your log</p>

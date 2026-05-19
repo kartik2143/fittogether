@@ -14,17 +14,15 @@ import { WorkoutPlanForm } from '../components/workout/WorkoutPlanForm'
 import { WorkoutLogForm } from '../components/workout/WorkoutLogForm'
 import { ExerciseRow } from '../components/workout/ExerciseRow'
 import { YouTubeEmbed } from '../components/workout/YouTubeEmbed'
+import { DateNavigator } from '../components/ui/DateNavigator'
 import { Card } from '../components/ui/Card'
-import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { todayStr } from '../utils/dateUtils'
 
-const today = todayStr()
-
 const completedConfig = {
-  yes: { label: 'Completed', variant: 'green' },
-  partial: { label: 'Partial', variant: 'yellow' },
-  no: { label: 'Missed', variant: 'red' },
+  yes:     { label: 'Completed', variant: 'green' },
+  partial: { label: 'Partial',   variant: 'yellow' },
+  no:      { label: 'Missed',    variant: 'red' },
 }
 
 export default function DailyWorkoutTracker() {
@@ -33,7 +31,14 @@ export default function DailyWorkoutTracker() {
   const forId = searchParams.get('for')
   const isCoachMode = !!forId && forId !== profile?.user_id
   const targetUserId = isCoachMode ? forId : profile?.user_id
+
+  const [selectedDate, setSelectedDate] = useState(todayStr())
   const [memberName, setMemberName] = useState('')
+  const [editingPlan, setEditingPlan] = useState(false)
+  const [editingLog, setEditingLog] = useState(false)
+
+  // Reset editing when date changes
+  useEffect(() => { setEditingPlan(false); setEditingLog(false) }, [selectedDate])
 
   useEffect(() => {
     if (!isCoachMode) return
@@ -41,28 +46,21 @@ export default function DailyWorkoutTracker() {
       .then(({ data }) => setMemberName(data?.display_name || 'Member'))
   }, [forId, isCoachMode])
 
-  const { plan, exercises, log, loading, refetch } = useWorkoutPlan(targetUserId, today)
-  const [editingPlan, setEditingPlan] = useState(false)
-  const [editingLog, setEditingLog] = useState(false)
+  const { plan, exercises, log, loading, refetch } = useWorkoutPlan(targetUserId, selectedDate)
 
+  const isFuture = selectedDate > todayStr()
   const canCreatePlan = !plan || editingPlan
   const showLog = plan && !editingLog && log
   const showLogForm = plan && (editingLog || !log)
 
-  async function handlePlanSaved() {
-    await refetch()
-    setEditingPlan(false)
-  }
-
-  async function handleLogSaved() {
-    await refetch()
-    setEditingLog(false)
-  }
+  async function handlePlanSaved() { await refetch(); setEditingPlan(false) }
+  async function handleLogSaved()  { await refetch(); setEditingLog(false) }
 
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-12 bg-white rounded-2xl border border-gray-100 animate-pulse" />
         <div className="h-40 bg-white rounded-2xl border border-gray-100 animate-pulse" />
       </div>
     )
@@ -79,6 +77,8 @@ export default function DailyWorkoutTracker() {
         💪 {isCoachMode ? `${memberName}'s Workout` : "Today's Workout"}
       </h1>
 
+      <DateNavigator date={selectedDate} onChange={setSelectedDate} />
+
       {/* Plan section */}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
@@ -94,7 +94,7 @@ export default function DailyWorkoutTracker() {
           <WorkoutPlanForm
             createdBy={profile?.user_id}
             forUserId={targetUserId}
-            date={today}
+            date={selectedDate}
             existing={editingPlan ? plan : undefined}
             existingExercises={editingPlan ? exercises : undefined}
             onSaved={handlePlanSaved}
@@ -143,8 +143,8 @@ export default function DailyWorkoutTracker() {
         )}
       </Card>
 
-      {/* Log section — hidden in coach mode, member logs their own */}
-      {plan && !isCoachMode && (
+      {/* Log section — hidden for coach mode and future dates */}
+      {plan && !isCoachMode && !isFuture && (
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <p className="font-semibold text-gray-800">Your log</p>
