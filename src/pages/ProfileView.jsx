@@ -127,17 +127,24 @@ export default function ProfileView() {
 
       {/* Coach actions */}
       {amTheirCoach && (
-        <div className="flex gap-2">
-          <Link to={`/workout?for=${userId}`} className="flex-1">
+        <div className="flex flex-col gap-2">
+          <Link to={`/health?for=${userId}`}>
             <button className="w-full py-2.5 rounded-xl border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors">
-              Write workout plan
+              📋 Log health
             </button>
           </Link>
-          <Link to={`/diet?for=${userId}`} className="flex-1">
-            <button className="w-full py-2.5 rounded-xl border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors">
-              Write meal plan
-            </button>
-          </Link>
+          <div className="flex gap-2">
+            <Link to={`/workout?for=${userId}`} className="flex-1">
+              <button className="w-full py-2.5 rounded-xl border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors">
+                💪 Write workout plan
+              </button>
+            </Link>
+            <Link to={`/diet?for=${userId}`} className="flex-1">
+              <button className="w-full py-2.5 rounded-xl border border-brand-300 text-brand-700 text-sm font-medium hover:bg-brand-50 transition-colors">
+                🥗 Write meal plan
+              </button>
+            </Link>
+          </div>
         </div>
       )}
     </div>

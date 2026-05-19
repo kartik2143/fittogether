@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useHealthLogs, useTodayHealthLog } from '../hooks/useHealthLogs'
 import { HealthLogForm } from '../components/health/HealthLogForm'
@@ -11,20 +12,33 @@ const today = todayStr()
 
 export default function DailyHealthTracker() {
   const { profile } = useAuth()
-  const { log: todayLog, loading: todayLoading, refetch: refetchToday } = useTodayHealthLog(profile?.user_id, today)
-  const { logs, loading: histLoading, refetch: refetchHist } = useHealthLogs(profile?.user_id, 60)
+  const [searchParams] = useSearchParams()
+  const forId = searchParams.get('for')
+  const isCoachMode = !!forId && forId !== profile?.user_id
+  const targetUserId = isCoachMode ? forId : profile?.user_id
+
+  const [memberName, setMemberName] = useState('')
   const [supplements, setSupplements] = useState([])
   const [editing, setEditing] = useState(false)
 
+  const { log: todayLog, loading: todayLoading, refetch: refetchToday } = useTodayHealthLog(targetUserId, today)
+  const { logs, loading: histLoading, refetch: refetchHist } = useHealthLogs(targetUserId, 60)
+
   useEffect(() => {
-    if (!profile?.user_id) return
+    if (!targetUserId) return
     supabase
       .from('supplement_list')
       .select('*')
-      .eq('user_id', profile.user_id)
+      .eq('user_id', targetUserId)
       .order('order_index')
       .then(({ data }) => setSupplements(data || []))
-  }, [profile?.user_id])
+  }, [targetUserId])
+
+  useEffect(() => {
+    if (!isCoachMode) return
+    supabase.from('profiles').select('display_name').eq('user_id', forId).single()
+      .then(({ data }) => setMemberName(data?.display_name || 'Member'))
+  }, [forId, isCoachMode])
 
   async function handleSaved() {
     await Promise.all([refetchToday(), refetchHist()])
@@ -35,7 +49,14 @@ export default function DailyHealthTracker() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold text-gray-900">📋 Daily Health Log</h1>
+      {isCoachMode && (
+        <Link to={`/profiles/${forId}`} className="text-sm text-brand-600 hover:underline">
+          ← Back to {memberName}'s profile
+        </Link>
+      )}
+      <h1 className="text-xl font-bold text-gray-900">
+        📋 {isCoachMode ? `${memberName}'s Health Log` : 'Daily Health Log'}
+      </h1>
 
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
@@ -54,7 +75,7 @@ export default function DailyHealthTracker() {
           <div className="h-20 bg-gray-100 rounded-xl animate-pulse" />
         ) : (!todayLog || editing) ? (
           <HealthLogForm
-            userId={profile?.user_id}
+            userId={targetUserId}
             date={today}
             existing={editing ? todayLog : undefined}
             supplements={supplements}
