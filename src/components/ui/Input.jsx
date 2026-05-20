@@ -1,8 +1,8 @@
 // Apple-style filled inputs — no border, gray fill, focus darkens the fill
 const base = `
   w-full px-3.5 py-3 rounded-apple text-[17px] leading-tight
-  bg-[#F2F2F7] text-gray-900 placeholder-gray-400
-  focus:outline-none focus:bg-[#E8E8ED]
+  bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600
+  focus:outline-none focus:bg-[#E8E8ED] dark:focus:bg-[#3A3A3C]
   disabled:opacity-40
   transition-colors duration-150
 `
@@ -11,7 +11,7 @@ export function Input({ label, error, className = '', ...props }) {
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-footnote font-medium text-gray-500 uppercase tracking-wide px-0.5">
+        <label className="text-footnote font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide px-0.5">
           {label}
         </label>
       )}
@@ -25,7 +25,7 @@ export function Textarea({ label, error, className = '', ...props }) {
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-footnote font-medium text-gray-500 uppercase tracking-wide px-0.5">
+        <label className="text-footnote font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide px-0.5">
           {label}
         </label>
       )}
@@ -42,7 +42,7 @@ export function Select({ label, error, children, className = '', ...props }) {
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-footnote font-medium text-gray-500 uppercase tracking-wide px-0.5">
+        <label className="text-footnote font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide px-0.5">
           {label}
         </label>
       )}

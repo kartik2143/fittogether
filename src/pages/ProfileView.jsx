@@ -86,7 +86,7 @@ export default function ProfileView() {
   return (
     <div className="flex flex-col gap-5">
       {/* Back */}
-      <Link to="/profiles" className="flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700">
+      <Link to="/profiles" className="flex items-center gap-1.5 text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
@@ -97,11 +97,11 @@ export default function ProfileView() {
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-br from-brand-400 to-brand-600 h-20" />
         <div className="px-5 pb-5 -mt-10 flex items-end gap-4">
-          <Avatar src={profile.avatar_url} name={profile.display_name} size="xl" className="ring-4 ring-white shadow-sm flex-shrink-0" />
+          <Avatar src={profile.avatar_url} name={profile.display_name} size="xl" className="ring-4 ring-white dark:ring-[#1C1C1E] shadow-sm flex-shrink-0" />
           <div className="pb-1 flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900 truncate">{profile.display_name}</h1>
-              {isMyProfile && <span className="text-xs text-gray-400 font-medium">you</span>}
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">{profile.display_name}</h1>
+              {isMyProfile && <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">you</span>}
             </div>
             <div className="flex items-center gap-2 flex-wrap mt-1">
               {roles.map(r => <Badge key={r.label} variant={r.variant}>{r.label}</Badge>)}
@@ -110,13 +110,13 @@ export default function ProfileView() {
         </div>
         <div className="flex items-center gap-1.5 px-5 pb-4 -mt-1">
           <span className="text-base">🔥</span>
-          <span className="text-sm font-bold text-orange-600">{streak} day streak</span>
+          <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{streak} day streak</span>
         </div>
       </Card>
 
       {/* Today's snapshot */}
       <Card className="p-4">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Today's Snapshot</p>
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Today's Snapshot</p>
         <div className="grid grid-cols-3 gap-2.5">
           <MetricCard
             label="Weight"
@@ -137,52 +137,52 @@ export default function ProfileView() {
           />
         </div>
         {healthLog?.activity_notes && (
-          <p className="text-sm text-gray-500 mt-3 italic">"{healthLog.activity_notes}"</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 italic">"{healthLog.activity_notes}"</p>
         )}
       </Card>
 
       {/* Weight trend */}
       <Card className="p-4">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Weight (30 days)</p>
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Weight (30 days)</p>
         <WeightChart logs={weightLogs} />
       </Card>
 
       {/* Coach actions */}
       {amTheirCoach && (
         <div className="flex flex-col gap-2.5">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1">Coach Actions</p>
+          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-1">Coach Actions</p>
           <Link to={`/health?for=${userId}`}>
-            <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors">
-              <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-3 bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-sm dark:shadow-none hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors">
+              <div className="w-9 h-9 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <span className="text-sm font-semibold text-gray-800">Log Health</span>
-              <svg className="w-4 h-4 text-gray-300 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Log Health</span>
+              <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
           </Link>
           <div className="flex gap-2.5">
             <Link to={`/workout?for=${userId}`} className="flex-1">
-              <div className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors">
-                <div className="w-9 h-9 bg-brand-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-col items-center gap-2 bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-sm dark:shadow-none hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors">
+                <div className="w-9 h-9 bg-brand-100 dark:bg-brand-900/30 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <span className="text-xs font-semibold text-gray-700 text-center">Workout Plan</span>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 text-center">Workout Plan</span>
               </div>
             </Link>
             <Link to={`/diet?for=${userId}`} className="flex-1">
-              <div className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-colors">
-                <div className="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-col items-center gap-2 bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-sm dark:shadow-none hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors">
+                <div className="w-9 h-9 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-orange-500 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <span className="text-xs font-semibold text-gray-700 text-center">Meal Plan</span>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 text-center">Meal Plan</span>
               </div>
             </Link>
           </div>
@@ -194,11 +194,11 @@ export default function ProfileView() {
 
 function MetricCard({ label, value, unit, color }) {
   const styles = {
-    blue:   'bg-blue-50 text-blue-700',
-    purple: 'bg-purple-50 text-purple-700',
-    green:  'bg-brand-50 text-brand-700',
-    yellow: 'bg-yellow-50 text-yellow-700',
-    gray:   'bg-gray-100 text-gray-500',
+    blue:   'bg-blue-50   dark:bg-blue-900/20   text-blue-700   dark:text-blue-300',
+    purple: 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300',
+    green:  'bg-brand-50  dark:bg-brand-900/20  text-brand-700  dark:text-brand-300',
+    yellow: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300',
+    gray:   'bg-gray-100  dark:bg-white/5        text-gray-500   dark:text-gray-400',
   }
   return (
     <div className={`${styles[color]} rounded-2xl p-3 flex flex-col gap-0.5`}>

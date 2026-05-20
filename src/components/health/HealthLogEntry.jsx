@@ -9,12 +9,12 @@ export function HealthLogEntry({ log }) {
     : null
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-3">
+    <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl border border-gray-100 dark:border-white/10 p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="font-semibold text-gray-800 text-sm">{formatDate(log.date)}</p>
+        <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{formatDate(log.date)}</p>
         {log.photo_url && (
           <button onClick={() => setPhotoOpen(true)}>
-            <img src={log.photo_url} alt="Progress" className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
+            <img src={log.photo_url} alt="Progress" className="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-white/10" />
           </button>
         )}
       </div>
@@ -26,8 +26,8 @@ export function HealthLogEntry({ log }) {
         )}
         {log.activity_notes && (
           <div className="col-span-2">
-            <span className="text-xs text-gray-400">Activity: </span>
-            <span className="text-gray-700">{log.activity_notes}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Activity: </span>
+            <span className="text-gray-700 dark:text-gray-300">{log.activity_notes}</span>
           </div>
         )}
       </div>
@@ -35,7 +35,7 @@ export function HealthLogEntry({ log }) {
       {log.supplements && log.supplements.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {log.supplements.map(s => (
-            <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 font-medium">
+            <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium">
               ✓ {s}
             </span>
           ))}
@@ -55,8 +55,8 @@ export function HealthLogEntry({ log }) {
 function Stat({ label, value }) {
   return (
     <div>
-      <span className="text-xs text-gray-400">{label}: </span>
-      <span className="text-gray-700 font-medium">{value}</span>
+      <span className="text-xs text-gray-400 dark:text-gray-500">{label}: </span>
+      <span className="text-gray-700 dark:text-gray-300 font-medium">{value}</span>
     </div>
   )
 }

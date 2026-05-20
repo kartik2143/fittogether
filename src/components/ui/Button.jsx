@@ -1,8 +1,8 @@
 const variants = {
   primary:   'bg-brand-600 text-white active:bg-brand-700 shadow-sm',
-  secondary: 'bg-[#F2F2F7] text-gray-800 active:bg-[#E5E5EA]',
+  secondary: 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-800 dark:text-gray-100 active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C]',
   danger:    'bg-red-500 text-white active:bg-red-600 shadow-sm',
-  ghost:     'text-brand-600 active:bg-brand-50',
+  ghost:     'text-brand-600 dark:text-brand-400 active:bg-brand-50 dark:active:bg-brand-900/30',
 }
 
 const sizes = {

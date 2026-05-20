@@ -9,10 +9,10 @@ export function DateNavigator({ date, onChange, disableFuture = false }) {
   const nextDisabled = disableFuture && nextMonday > today
 
   return (
-    <div className="flex items-center gap-1 bg-white rounded-apple-lg shadow-apple-card px-2 py-2">
+    <div className="flex items-center gap-1 bg-white dark:bg-[#1C1C1E] rounded-apple-lg shadow-apple-card dark:shadow-none px-2 py-2">
       <button
         onClick={() => onChange(addDays(weekDays[0], -7))}
-        className="p-2 rounded-apple text-gray-400 active:bg-[#F2F2F7] transition-colors"
+        className="p-2 rounded-apple text-gray-400 dark:text-gray-500 active:bg-[#F2F2F7] dark:active:bg-white/10 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -36,11 +36,11 @@ export function DateNavigator({ date, onChange, disableFuture = false }) {
                 isSelected
                   ? 'bg-brand-600 text-white'
                   : disabled
-                  ? 'text-gray-300 cursor-not-allowed'
-                  : 'text-gray-700 active:bg-[#F2F2F7]',
+                  ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
+                  : 'text-gray-700 dark:text-gray-200 active:bg-[#F2F2F7] dark:active:bg-white/10',
               ].join(' ')}
             >
-              <span className={`text-[10px] font-medium ${isSelected ? 'text-white/70' : isToday ? 'text-brand-600' : 'text-gray-400'}`}>
+              <span className={`text-[10px] font-medium ${isSelected ? 'text-white/70' : isToday ? 'text-brand-500' : 'text-gray-400 dark:text-gray-500'}`}>
                 {DAY_LABELS[i]}
               </span>
               <span className={`text-[15px] font-semibold leading-tight tracking-tight ${isToday && !isSelected ? 'text-brand-600' : ''}`}>
@@ -57,7 +57,7 @@ export function DateNavigator({ date, onChange, disableFuture = false }) {
       <button
         onClick={() => !nextDisabled && onChange(nextMonday)}
         disabled={nextDisabled}
-        className="p-2 rounded-apple text-gray-400 active:bg-[#F2F2F7] disabled:text-gray-200 transition-colors"
+        className="p-2 rounded-apple text-gray-400 dark:text-gray-500 active:bg-[#F2F2F7] dark:active:bg-white/10 disabled:text-gray-200 dark:disabled:text-gray-700 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

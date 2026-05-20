@@ -75,12 +75,12 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 py-10">
+    <div className="min-h-screen flex items-start justify-center bg-gray-50 dark:bg-black px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img src="/logo.svg" alt="FitTogether" className="w-16 h-16 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create account</h1>
-          <p className="text-gray-400 text-sm mt-1.5">Join FitTogether</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Create account</h1>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1.5">Join FitTogether</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -89,13 +89,13 @@ export default function Signup() {
             <button type="button" onClick={() => fileRef.current?.click()}>
               <Avatar src={avatarPreview} name={displayName || '?'} size="xl" className="ring-4 ring-white shadow-md hover:shadow-lg transition-shadow" />
             </button>
-            <span className="text-xs text-gray-400">Tap to add photo (optional)</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Tap to add photo (optional)</span>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 transition-colors cursor-text">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Display name</span>
+          <div className="bg-white dark:bg-[#1C1C1E] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
+            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 dark:focus-within:bg-brand-900/20 transition-colors cursor-text">
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Display name</span>
               <input
                 type="text"
                 value={displayName}
@@ -103,12 +103,12 @@ export default function Signup() {
                 placeholder="e.g. Kartik"
                 required
                 maxLength={40}
-                className="text-base text-gray-900 outline-none bg-transparent placeholder:text-gray-300"
+                className="text-base text-gray-900 dark:text-white outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
               />
             </label>
-            <div className="h-px bg-gray-100 mx-4" />
-            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 transition-colors cursor-text">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Email</span>
+            <div className="h-px bg-gray-100 dark:bg-white/10 mx-4" />
+            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 dark:focus-within:bg-brand-900/20 transition-colors cursor-text">
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Email</span>
               <input
                 type="email"
                 value={email}
@@ -116,12 +116,12 @@ export default function Signup() {
                 placeholder="you@example.com"
                 required
                 autoComplete="email"
-                className="text-base text-gray-900 outline-none bg-transparent placeholder:text-gray-300"
+                className="text-base text-gray-900 dark:text-white outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
               />
             </label>
-            <div className="h-px bg-gray-100 mx-4" />
-            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 transition-colors cursor-text">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Password</span>
+            <div className="h-px bg-gray-100 dark:bg-white/10 mx-4" />
+            <label className="flex flex-col px-4 py-3.5 focus-within:bg-brand-50/40 dark:focus-within:bg-brand-900/20 transition-colors cursor-text">
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Password</span>
               <input
                 type="password"
                 value={password}
@@ -129,14 +129,14 @@ export default function Signup() {
                 placeholder="Min. 6 characters"
                 required
                 autoComplete="new-password"
-                className="text-base text-gray-900 outline-none bg-transparent placeholder:text-gray-300"
+                className="text-base text-gray-900 dark:text-white outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
               />
             </label>
           </div>
 
           {/* Role picker */}
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">I am a…</p>
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-1">I am a…</p>
             <div className="grid grid-cols-2 gap-2.5">
               {[
                 { value: 'member', emoji: '🏃', label: 'Member', desc: 'I log my own data' },
@@ -149,21 +149,21 @@ export default function Signup() {
                   className={`
                     flex flex-col items-center gap-1.5 p-4 rounded-2xl border-2 text-sm transition-all
                     ${role === value
-                      ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 shadow-sm'
+                      : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#1C1C1E] text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/20'
                     }
                   `}
                 >
                   <span className="text-3xl">{emoji}</span>
                   <span className="font-semibold">{label}</span>
-                  <span className="text-xs text-center text-gray-400 leading-tight">{desc}</span>
+                  <span className="text-xs text-center text-gray-400 dark:text-gray-500 leading-tight">{desc}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>
           )}
 
           <Button type="submit" size="lg" loading={loading} className="w-full">
@@ -171,9 +171,9 @@ export default function Signup() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-brand-600 hover:underline">
+          <Link to="/login" className="font-medium text-brand-600 dark:text-brand-400 hover:underline">
             Sign in
           </Link>
         </p>

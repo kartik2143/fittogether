@@ -90,22 +90,22 @@ export default function Settings() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Settings</h1>
 
       {/* Incoming coach requests (for coaches) */}
       {incoming.length > 0 && (
         <section className="flex flex-col gap-2">
           <div className="flex items-center gap-2 px-1">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Requests</p>
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Pending Requests</p>
             <span className="bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">{incoming.length}</span>
           </div>
-          <Card className="overflow-hidden divide-y divide-gray-100">
+          <Card className="overflow-hidden divide-y divide-gray-100 dark:divide-white/10">
             {incoming.map(req => (
               <div key={req.id} className="flex items-center gap-3 px-4 py-3.5">
                 <Avatar src={req.member?.avatar_url} name={req.member?.display_name} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">{req.member?.display_name}</p>
-                  <p className="text-xs text-gray-400">{req.member?.email}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{req.member?.display_name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{req.member?.email}</p>
                 </div>
                 <div className="flex gap-1.5">
                   <Button size="sm" onClick={() => handleRespond(req.id, req.member_id, true)}>Accept</Button>
@@ -125,7 +125,7 @@ export default function Settings() {
             <div className="flex items-center gap-3 px-4 py-3.5">
               <Avatar src={currentCoach.avatar_url} name={currentCoach.display_name} size="md" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900">{currentCoach.display_name}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">{currentCoach.display_name}</p>
                 <p className="text-xs text-brand-600 font-medium mt-0.5">Coach</p>
               </div>
               <button onClick={handleRemoveCoach} className="text-sm text-red-500 font-medium hover:text-red-700">
@@ -137,22 +137,22 @@ export default function Settings() {
               {outgoing.filter(r => r.status === 'pending').map(r => (
                 <div key={r.id} className="flex items-center justify-between px-4 py-3.5">
                   <div>
-                    <p className="text-xs text-gray-400">Request pending</p>
-                    <p className="text-sm font-semibold text-gray-900">{r.coach?.display_name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">Request pending</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{r.coach?.display_name}</p>
                   </div>
                   <button onClick={() => cancelRequest(r.id)} className="text-sm text-red-500 font-medium hover:text-red-700">Cancel</button>
                 </div>
               ))}
               <button
                 onClick={() => setAddCoachOpen(true)}
-                className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+                className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
               >
-                <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-brand-600">Add coach by email</span>
+                <span className="text-sm font-medium text-brand-600 dark:text-brand-400">Add coach by email</span>
               </button>
             </div>
           )}
@@ -173,12 +173,12 @@ export default function Settings() {
           ))}
           {supplements.length === 0 && (
             <div className="px-4 py-3.5">
-              <p className="text-sm text-gray-400">No supplements added yet</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">No supplements added yet</p>
             </div>
           )}
           <div className="flex items-center gap-2 px-4 py-3">
             <input
-              className="flex-1 text-sm text-gray-900 outline-none placeholder:text-gray-400 bg-transparent"
+              className="flex-1 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-600 bg-transparent"
               placeholder="Add supplement…"
               value={newSupp}
               onChange={e => setNewSupp(e.target.value)}
@@ -200,7 +200,7 @@ export default function Settings() {
       {/* Add coach modal */}
       <Modal open={addCoachOpen} onClose={() => { setAddCoachOpen(false); setCoachMsg('') }} title="Add a coach">
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-gray-600">Enter your coach's email address. They'll get a request to accept.</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Enter your coach's email address. They'll get a request to accept.</p>
           <Input
             label="Coach's email"
             type="email"
@@ -209,7 +209,7 @@ export default function Settings() {
             placeholder="coach@example.com"
           />
           {coachMsg && (
-            <p className={`text-sm rounded-xl px-4 py-3 ${coachMsg.includes('sent') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+            <p className={`text-sm rounded-xl px-4 py-3 ${coachMsg.includes('sent') ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
               {coachMsg}
             </p>
           )}

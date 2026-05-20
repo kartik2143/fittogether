@@ -14,6 +14,10 @@
     background-color: #F2F2F7;
     @apply text-gray-900 font-sans;
   }
+  .dark body {
+    background-color: #000000;
+    @apply text-white;
+  }
 }
 
 @layer utilities {
@@ -25,5 +29,8 @@
     background: rgba(255, 255, 255, 0.88);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
+  }
+  .dark .glass {
+    background: rgba(28, 28, 30, 0.88);
   }
 }

@@ -3,6 +3,7 @@ import { Outlet, NavLink } from 'react-router-dom'
 import { SideDrawer } from './SideDrawer'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { useDarkMode } from '../../hooks/useDarkMode'
 
 const bottomNav = [
   { to: '/',         label: 'Home',    icon: HomeIcon,     end: true },
@@ -16,6 +17,7 @@ export function Layout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { profile } = useAuth()
   const [pendingCount, setPendingCount] = useState(0)
+  const [dark, setDark] = useDarkMode()
 
   useEffect(() => {
     if (!profile?.user_id || !profile?.is_coach) return
@@ -28,26 +30,44 @@ export function Layout() {
   }, [profile?.user_id, profile?.is_coach])
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F2F2F7' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: dark ? '#000000' : '#F2F2F7' }}>
 
       {/* Top bar — frosted glass */}
       <header className="sticky top-0 z-20 glass shadow-apple-bar px-4 h-12 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/logo.svg" alt="FitTogether" className="w-6 h-6" />
-          <span className="text-headline font-semibold text-gray-900 tracking-tight">FitTogether</span>
+          <span className="text-headline font-semibold text-gray-900 dark:text-white tracking-tight">FitTogether</span>
         </div>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="relative p-2 -mr-1 rounded-apple text-gray-500 active:bg-black/5 transition-colors"
-          aria-label="Open menu"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          {pendingCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
-          )}
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Dark mode toggle */}
+          <button
+            onClick={() => setDark(d => !d)}
+            className="p-2 rounded-apple text-gray-500 dark:text-gray-400 active:bg-black/5 dark:active:bg-white/10 transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {dark ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="relative p-2 -mr-1 rounded-apple text-gray-500 dark:text-gray-400 active:bg-black/5 dark:active:bg-white/10 transition-colors"
+            aria-label="Open menu"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            {pendingCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
+            )}
+          </button>
+        </div>
       </header>
 
       <SideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
@@ -66,7 +86,7 @@ export function Layout() {
               end={end}
               className={({ isActive }) =>
                 `flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors
-                 ${isActive ? 'text-brand-600' : 'text-gray-400'}`
+                 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-600'}`
               }
             >
               {({ isActive }) => (
