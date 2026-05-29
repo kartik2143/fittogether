@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-
-const SECTIONS = [
-  { key: 'warmup',   label: 'Warm-up',     emoji: '🔥' },
-  { key: 'main',     label: 'Main Workout', emoji: '💪' },
-  { key: 'cooldown', label: 'Post-workout', emoji: '🧘' },
-]
-
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
@@ -18,6 +11,12 @@ import { DateNavigator } from '../components/ui/DateNavigator'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { todayStr } from '../utils/dateUtils'
+
+const SECTIONS = [
+  { key: 'warmup',   label: 'Warm-up',     emoji: '🔥' },
+  { key: 'main',     label: 'Main Workout', emoji: '💪' },
+  { key: 'cooldown', label: 'Post-workout', emoji: '🧘' },
+]
 
 const completedConfig = {
   yes:     { label: 'Completed', variant: 'green' },

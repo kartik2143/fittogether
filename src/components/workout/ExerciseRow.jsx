@@ -14,14 +14,13 @@ export function ExerciseRow({ exercise, actual, onChange, readOnly }) {
       <div className="flex items-start justify-between gap-2">
         <p className="font-medium text-gray-800 text-sm">{exercise.exercise_name}</p>
         {exercise.youtube_url && (
-          <a
-            href={exercise.youtube_url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => window.open(exercise.youtube_url, '_blank', 'noopener,noreferrer')}
             className="text-xs text-brand-600 whitespace-nowrap hover:underline"
           >
             Watch ↗
-          </a>
+          </button>
         )}
       </div>
 
