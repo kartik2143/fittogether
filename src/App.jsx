@@ -5,6 +5,7 @@ import { Layout } from './components/layout/Layout'
 
 import Login from './pages/auth/Login'
 import Signup from './pages/auth/Signup'
+import AuthCallback from './pages/auth/AuthCallback'
 import Dashboard from './pages/Dashboard'
 import DailyHealthTracker from './pages/DailyHealthTracker'
 import DailyWorkoutTracker from './pages/DailyWorkoutTracker'
@@ -22,6 +23,7 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Protected — all share the Layout shell */}
           <Route
