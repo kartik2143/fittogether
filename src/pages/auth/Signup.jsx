@@ -11,12 +11,14 @@ export default function Signup() {
   const navigate = useNavigate()
   const { refreshProfile } = useAuth()
   const fileRef = useRef(null)
+
+  const [step, setStep] = useState('form') // 'form' | 'otp'
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('member') // 'member' | 'coach'
+  const [role, setRole] = useState('member')
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
+  const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -27,26 +29,42 @@ export default function Signup() {
     setAvatarPreview(URL.createObjectURL(file))
   }
 
-  async function handleSubmit(e) {
+  async function handleSendOtp(e) {
     e.preventDefault()
+    if (!displayName.trim()) return setError('Please enter your name.')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setError('Please enter a valid email address.')
-    if (password.length < 6) return setError('Password must be at least 6 characters.')
+    setError('')
+    setLoading(true)
+    const { error: err } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: { shouldCreateUser: true },
+    })
+    setLoading(false)
+    if (err) { setError(err.message); return }
+    setStep('otp')
+  }
+
+  async function handleVerifyOtp(e) {
+    e.preventDefault()
+    if (otp.length !== 6) return setError('Enter the 6-digit code from your email.')
     setError('')
     setLoading(true)
 
-    // 1. Sign up
-    const { data: authData, error: authErr } = await supabase.auth.signUp({ email, password })
-    if (authErr) { setError(authErr.message); setLoading(false); return }
+    const { data, error: err } = await supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: otp,
+      type: 'email',
+    })
+    if (err) { setError(err.message); setLoading(false); return }
 
-    const userId = authData.user.id
+    const userId = data.user.id
 
-    // 2. Upload avatar if provided
+    // Upload avatar if provided
     let avatarUrl = null
     if (avatarFile) {
       try {
         const compressed = await compressImage(avatarFile)
-        const ext = 'jpg'
-        const path = `${userId}/avatar.${ext}`
+        const path = `${userId}/avatar.jpg`
         const { error: uploadErr } = await supabase.storage
           .from('avatars')
           .upload(path, compressed, { upsert: true, contentType: 'image/jpeg' })
@@ -59,22 +77,85 @@ export default function Signup() {
       }
     }
 
-    // 3. Insert profile
-    const { error: profileErr } = await supabase.from('profiles').insert({
-      user_id: userId,
-      email: email.toLowerCase().trim(),
-      display_name: displayName.trim(),
-      avatar_url: avatarUrl,
-      is_coach: role === 'coach',
-      is_member: role === 'member',
-    })
+    // Check if profile already exists (user may have signed up before)
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle()
 
-    if (profileErr) { setError(profileErr.message); setLoading(false); return }
+    if (!existing) {
+      const { error: profileErr } = await supabase.from('profiles').insert({
+        user_id: userId,
+        email: email.trim().toLowerCase(),
+        display_name: displayName.trim(),
+        avatar_url: avatarUrl,
+        is_coach: role === 'coach',
+        is_member: role === 'member',
+      })
+      if (profileErr) { setError(profileErr.message); setLoading(false); return }
+    }
 
     await refreshProfile()
     navigate('/')
   }
 
+  // ── OTP step ──────────────────────────────────────────────────
+  if (step === 'otp') {
+    return (
+      <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 py-10">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <img src="/logo.svg" alt="FitTogether" className="w-14 h-14 mx-auto mb-3" />
+            <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
+            <p className="text-gray-500 text-sm mt-2">
+              We sent a 6-digit code to<br />
+              <span className="font-medium text-gray-800">{email}</span>
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyOtp} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-gray-700 text-center">Verification code</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={otp}
+                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                autoFocus
+                className="w-full text-center text-3xl font-mono tracking-[0.6em] py-4 px-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:tracking-[0.6em] placeholder:text-gray-300"
+              />
+            </div>
+
+            <p className="text-xs text-gray-400 text-center">
+              Check your spam folder if you don't see it within a minute.
+            </p>
+
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            )}
+
+            <Button type="submit" size="lg" loading={loading} className="w-full">
+              Verify &amp; create account
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => { setStep('form'); setOtp(''); setError('') }}
+              className="text-sm text-gray-500 hover:text-gray-700 text-center"
+            >
+              ← Use a different email
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Form step ─────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 py-10">
       <div className="w-full max-w-sm">
@@ -84,7 +165,7 @@ export default function Signup() {
           <p className="text-gray-500 text-sm mt-1">Join FitTogether</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+        <form onSubmit={handleSendOtp} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
           {/* Avatar picker */}
           <div className="flex flex-col items-center gap-2">
             <button type="button" onClick={() => fileRef.current?.click()}>
@@ -111,15 +192,6 @@ export default function Signup() {
             placeholder="you@example.com"
             required
             autoComplete="email"
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Min. 6 characters"
-            required
-            autoComplete="new-password"
           />
 
           {/* Role picker */}
@@ -155,7 +227,7 @@ export default function Signup() {
           )}
 
           <Button type="submit" size="lg" loading={loading} className="w-full mt-1">
-            Create account
+            Send verification code
           </Button>
         </form>
 
