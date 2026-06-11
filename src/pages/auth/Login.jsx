@@ -34,7 +34,7 @@ export default function Login() {
 
   async function handleVerifyOtp(e) {
     e.preventDefault()
-    if (otp.length !== 6) return setError('Enter the 6-digit code from your email.')
+    if (otp.length < 6) return setError('Enter the full code from your email.')
     setError('')
     setLoading(true)
     const { error: err } = await supabase.auth.verifyOtp({
@@ -68,10 +68,10 @@ export default function Login() {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={8}
                 value={otp}
                 onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
+                placeholder="00000000"
                 autoFocus
                 className="w-full text-center text-3xl font-mono tracking-[0.6em] py-4 px-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:tracking-[0.6em] placeholder:text-gray-300"
               />
