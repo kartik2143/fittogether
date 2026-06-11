@@ -9,9 +9,8 @@ import { useStreak } from '../hooks/useStreak'
 import { supabase } from '../lib/supabase'
 import { todayStr, subtractDays } from '../utils/dateUtils'
 
-const today = todayStr()
-
 export default function MyProgress() {
+  const today = todayStr()
   const { profile } = useAuth()
   const [weightRange, setWeightRange] = useState('30d')
   const { logs: allLogs, loading } = useHealthLogs(profile?.user_id, 999)

@@ -7,11 +7,10 @@ import { Avatar } from '../components/ui/Avatar'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
 import { WeightChart } from '../components/progress/WeightChart'
-import { todayStr } from '../utils/dateUtils'
-
-const today = todayStr()
+import { todayStr, subtractDays } from '../utils/dateUtils'
 
 export default function ProfileView() {
+  const today = todayStr()
   const { userId } = useParams()
   const { profile: me } = useAuth()
   const [profile, setProfile] = useState(null)
@@ -50,7 +49,7 @@ export default function ProfileView() {
       supabase.from('health_logs')
         .select('date, weight_kg')
         .eq('user_id', userId)
-        .gte('date', new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10))
+        .gte('date', subtractDays(today, 30))
         .order('date'),
       supabase.from('workout_plans').select('*').eq('for_user_id', userId).eq('date', today).maybeSingle(),
       supabase.from('workout_logs').select('completed').eq('user_id', userId).eq('date', today).maybeSingle(),

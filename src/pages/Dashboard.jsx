@@ -12,8 +12,6 @@ import { todayStr, formatDate } from '../utils/dateUtils'
 import { supabase } from '../lib/supabase'
 import { useEffect, useState } from 'react'
 
-const today = todayStr()
-
 const quickActions = [
   { to: '/health',  emoji: '📋', label: "Log Today's Health",   color: 'from-blue-500 to-blue-600' },
   { to: '/workout', emoji: '💪', label: "Today's Workout",      color: 'from-brand-500 to-brand-600' },
@@ -21,6 +19,7 @@ const quickActions = [
 ]
 
 export default function Dashboard() {
+  const today = todayStr()
   const { profile } = useAuth()
   const { log: healthLog, loading: healthLoading } = useTodayHealthLog(profile?.user_id, today)
   const { plan: workoutPlan, log: workoutLog } = useWorkoutPlan(profile?.user_id, today)

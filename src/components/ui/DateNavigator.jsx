@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { todayStr, addDays, getWeekDays } from '../../utils/dateUtils'
 
-const today = todayStr()
-
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -23,6 +21,9 @@ function firstDayOffset(year, month) {
 }
 
 export function DateNavigator({ date, onChange, disableFuture = false }) {
+  // Computed per render — a module-level constant would go stale when the
+  // PWA stays alive in memory across midnight.
+  const today = todayStr()
   const [expanded, setExpanded] = useState(false)
   const [viewYear,  setViewYear]  = useState(() => parseInt(date.slice(0, 4)))
   const [viewMonth, setViewMonth] = useState(() => parseInt(date.slice(5, 7)) - 1)
