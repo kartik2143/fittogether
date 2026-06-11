@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useCoachRequests } from '../hooks/useCoachRequests'
+import { useFriends } from '../hooks/useFriends'
 import { supabase } from '../lib/supabase'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -12,6 +13,7 @@ import { Modal } from '../components/ui/Modal'
 export default function Settings() {
   const { profile, refreshProfile } = useAuth()
   const { incoming, outgoing, sendRequest, respondToRequest, cancelRequest, loading: reqLoading } = useCoachRequests(profile?.user_id)
+  const { friends, incoming: friendRequests, outgoing: friendOutgoing, sendRequest: sendFriendRequest, respondToRequest: respondFriend, cancelRequest: cancelFriendRequest, removeFriend } = useFriends(profile?.user_id)
   const [supplements, setSupplements] = useState([])
   const [newSupp, setNewSupp] = useState('')
   const [suppLoading, setSuppLoading] = useState(false)
@@ -20,6 +22,10 @@ export default function Settings() {
   const [coachMsg, setCoachMsg] = useState('')
   const [coachLoading, setCoachLoading] = useState(false)
   const [currentCoach, setCurrentCoach] = useState(null)
+  const [addFriendOpen, setAddFriendOpen] = useState(false)
+  const [friendEmail, setFriendEmail] = useState('')
+  const [friendMsg, setFriendMsg] = useState('')
+  const [friendLoading, setFriendLoading] = useState(false)
 
   useEffect(() => {
     if (!profile?.user_id) return
@@ -81,6 +87,21 @@ export default function Settings() {
   async function handleRespond(requestId, memberId, accept) {
     await respondToRequest(requestId, memberId, accept)
     await refreshProfile()
+  }
+
+  async function handleSendFriendRequest() {
+    if (!friendEmail.trim()) return
+    setFriendLoading(true)
+    setFriendMsg('')
+    const result = await sendFriendRequest(friendEmail)
+    if (result.error) {
+      setFriendMsg(result.error)
+    } else {
+      setFriendMsg(`Friend request sent to ${result.friendName}!`)
+      setFriendEmail('')
+      setTimeout(() => setAddFriendOpen(false), 1500)
+    }
+    setFriendLoading(false)
   }
 
   async function handleRemoveCoach() {
@@ -150,6 +171,67 @@ export default function Settings() {
         )}
       </Card>
 
+      {/* Friends */}
+      <Card className="p-4">
+        <p className="font-semibold text-gray-800 mb-3">My friends</p>
+
+        {/* Incoming friend requests */}
+        {friendRequests.length > 0 && (
+          <div className="flex flex-col gap-3 mb-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              Requests received
+              <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{friendRequests.length}</span>
+            </p>
+            {friendRequests.map(req => (
+              <div key={req.id} className="flex items-center gap-3">
+                <Avatar src={req.requester?.avatar_url} name={req.requester?.display_name} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800">{req.requester?.display_name}</p>
+                  <p className="text-xs text-gray-400">{req.requester?.email}</p>
+                </div>
+                <div className="flex gap-1.5">
+                  <Button size="sm" onClick={() => respondFriend(req.id, true)}>Accept</Button>
+                  <Button size="sm" variant="secondary" onClick={() => respondFriend(req.id, false)}>Decline</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Accepted friends */}
+        {friends.length > 0 && (
+          <div className="flex flex-col gap-3 mb-3">
+            {friends.map(({ id, friend }) => (
+              <div key={id} className="flex items-center gap-3">
+                <Avatar src={friend?.avatar_url} name={friend?.display_name} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800">{friend?.display_name}</p>
+                  <Badge variant="green">Friend</Badge>
+                </div>
+                <button onClick={() => removeFriend(id)} className="text-xs text-red-400 hover:text-red-600 font-medium">
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Outgoing pending */}
+        {friendOutgoing.map(req => (
+          <div key={req.id} className="flex items-center justify-between mb-2">
+            <p className="text-sm text-gray-600">Request pending for <b>{req.recipient?.display_name}</b></p>
+            <button onClick={() => cancelFriendRequest(req.id)} className="text-xs text-red-400 hover:text-red-600">Cancel</button>
+          </div>
+        ))}
+
+        <button
+          onClick={() => setAddFriendOpen(true)}
+          className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-sm text-gray-400 hover:border-brand-400 hover:text-brand-600 transition-colors"
+        >
+          + Add friend by email
+        </button>
+      </Card>
+
       {/* Supplement list */}
       <Card className="p-4">
         <p className="font-semibold text-gray-800 mb-3">My supplements</p>
@@ -179,6 +261,28 @@ export default function Settings() {
           </Button>
         </div>
       </Card>
+
+      {/* Add friend modal */}
+      <Modal open={addFriendOpen} onClose={() => { setAddFriendOpen(false); setFriendMsg('') }} title="Add a friend">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-600">Enter their email address. They'll get a request to accept.</p>
+          <Input
+            label="Friend's email"
+            type="email"
+            value={friendEmail}
+            onChange={e => setFriendEmail(e.target.value)}
+            placeholder="friend@example.com"
+          />
+          {friendMsg && (
+            <p className={`text-sm rounded-lg px-3 py-2 ${friendMsg.includes('sent') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+              {friendMsg}
+            </p>
+          )}
+          <Button loading={friendLoading} onClick={handleSendFriendRequest} className="w-full">
+            Send request
+          </Button>
+        </div>
+      </Modal>
 
       {/* Add coach modal */}
       <Modal open={addCoachOpen} onClose={() => { setAddCoachOpen(false); setCoachMsg('') }} title="Add a coach">
