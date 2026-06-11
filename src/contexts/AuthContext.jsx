@@ -13,12 +13,13 @@ export function AuthProvider({ children }) {
       if (data.session) fetchProfile(data.session.user.id)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      if (session) {
-        fetchProfile(session.user.id)
-      } else {
+      if (!session) {
         setProfile(null)
+      } else if (event !== 'TOKEN_REFRESHED') {
+        // Token refreshes fire every ~hour; the profile row hasn't changed.
+        fetchProfile(session.user.id)
       }
     })
 

@@ -11,31 +11,22 @@ export function useWorkoutPlan(forUserId, date) {
     if (!forUserId || !date) return
     setLoading(true)
 
-    const { data: planData } = await supabase
+    // Single round trip: plan + exercises + logs via embedded selects.
+    const { data } = await supabase
       .from('workout_plans')
-      .select('*')
+      .select('*, workout_exercises(*), workout_logs(*)')
       .eq('for_user_id', forUserId)
       .eq('date', date)
+      .order('order_index', { referencedTable: 'workout_exercises' })
       .maybeSingle()
 
-    setPlan(planData)
-
-    if (planData) {
-      const { data: exData } = await supabase
-        .from('workout_exercises')
-        .select('*')
-        .eq('plan_id', planData.id)
-        .order('order_index')
-      setExercises(exData || [])
-
-      const { data: logData } = await supabase
-        .from('workout_logs')
-        .select('*')
-        .eq('plan_id', planData.id)
-        .eq('user_id', forUserId)
-        .maybeSingle()
-      setLog(logData)
+    if (data) {
+      const { workout_exercises, workout_logs, ...planData } = data
+      setPlan(planData)
+      setExercises(workout_exercises || [])
+      setLog((workout_logs || []).find(l => l.user_id === forUserId) || null)
     } else {
+      setPlan(null)
       setExercises([])
       setLog(null)
     }

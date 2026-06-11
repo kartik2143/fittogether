@@ -13,7 +13,12 @@ export default function MyProgress() {
   const today = todayStr()
   const { profile } = useAuth()
   const [weightRange, setWeightRange] = useState('30d')
-  const { logs: allLogs, loading } = useHealthLogs(profile?.user_id, 999)
+  // Only the columns the charts need — full rows include notes and other
+  // text fields that add real payload at 999 rows.
+  const { logs: allLogs, loading } = useHealthLogs(
+    profile?.user_id, 999,
+    'id, date, weight_kg, sleep_hours, sleep_quality, supplements, photo_url'
+  )
   const { streak } = useStreak(profile?.user_id)
   const [workoutStats, setWorkoutStats] = useState(null)
 

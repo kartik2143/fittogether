@@ -10,24 +10,20 @@ export function useMealPlan(forUserId, date) {
     if (!forUserId || !date) return
     setLoading(true)
 
-    const { data: planData } = await supabase
+    // Single round trip: plan + logs via embedded select.
+    const { data } = await supabase
       .from('meal_plans')
-      .select('*')
+      .select('*, meal_logs(*)')
       .eq('for_user_id', forUserId)
       .eq('date', date)
       .maybeSingle()
 
-    setPlan(planData)
-
-    if (planData) {
-      const { data: logData } = await supabase
-        .from('meal_logs')
-        .select('*')
-        .eq('plan_id', planData.id)
-        .eq('user_id', forUserId)
-        .maybeSingle()
-      setLog(logData)
+    if (data) {
+      const { meal_logs, ...planData } = data
+      setPlan(planData)
+      setLog((meal_logs || []).find(l => l.user_id === forUserId) || null)
     } else {
+      setPlan(null)
       setLog(null)
     }
 

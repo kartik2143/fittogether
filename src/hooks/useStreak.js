@@ -17,7 +17,10 @@ export function useStreak(userId) {
         .select('date')
         .eq('user_id', userId)
         .order('date', { ascending: false })
-        .limit(400)
+        // 120 consecutive days is the longest streak we can show; anything
+        // beyond that is vanishingly rare and not worth the extra payload
+        // on pages that render one streak per profile card.
+        .limit(120)
 
       if (cancelled || !data) return
 
