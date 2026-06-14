@@ -104,17 +104,57 @@ const tools = [{
   ],
 }]
 
+// ── Server-side access control ────────────────────────────────
+// Returns the set of user_ids this requester is allowed to read/write.
+// Always includes the requester themselves; coaches also get their members.
+async function buildAllowedIds(userId) {
+  const allowed = new Set([userId])
+  const { data: members } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('coach_id', userId)
+  members?.forEach(m => allowed.add(m.user_id))
+  return allowed
+}
+
+// Resolve a plan's owner and check access
+async function assertPlanAccess(planId, allowed) {
+  const { data } = await supabase
+    .from('workout_plans')
+    .select('for_user_id')
+    .eq('id', planId)
+    .single()
+  if (!data) return { error: 'Plan not found.' }
+  if (!allowed.has(data.for_user_id)) return { error: 'Access denied.' }
+  return null
+}
+
+// Resolve an exercise's plan owner and check access
+async function assertExerciseAccess(exerciseId, allowed) {
+  const { data } = await supabase
+    .from('workout_exercises')
+    .select('plan_id, workout_plans(for_user_id)')
+    .eq('id', exerciseId)
+    .single()
+  if (!data) return { error: 'Exercise not found.' }
+  const owner = data.workout_plans?.for_user_id
+  if (!owner || !allowed.has(owner)) return { error: 'Access denied.' }
+  return null
+}
+
 // ── Tool executor ─────────────────────────────────────────────
-async function runTool(name, args, coachId) {
+async function runTool(name, args, requesterId, allowed) {
   switch (name) {
     case 'list_members': {
+      // Only return members of this coach — enforced by the coach_id filter
       const { data } = await supabase
         .from('profiles')
         .select('user_id, display_name, email')
-        .eq('coach_id', coachId)
+        .eq('coach_id', requesterId)
       return { members: data || [] }
     }
     case 'get_workout_plan': {
+      if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
       const { data: plan } = await supabase
         .from('workout_plans')
         .select('*, workout_exercises(*)')
@@ -125,6 +165,7 @@ async function runTool(name, args, coachId) {
       return plan ? { plan } : { plan: null, message: 'No workout plan found for this date.' }
     }
     case 'get_recent_workouts': {
+      if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
       const since = new Date()
       since.setDate(since.getDate() - (args.days || 14))
       const dateStr = since.toISOString().slice(0, 10)
@@ -137,11 +178,12 @@ async function runTool(name, args, coachId) {
       return { plans: data || [] }
     }
     case 'create_workout_plan': {
+      if (!allowed.has(args.for_user_id)) return { error: 'Access denied.' }
       const { data, error } = await supabase
         .from('workout_plans')
         .insert({
           for_user_id: args.for_user_id,
-          created_by: args.created_by,
+          created_by: requesterId,
           date: args.date,
           description: args.description,
           type: args.type || 'individual',
@@ -152,7 +194,9 @@ async function runTool(name, args, coachId) {
       return { plan_id: data.id, message: `Plan created for ${args.date}.` }
     }
     case 'add_exercise': {
-      // Get current max order_index
+      const deny = await assertPlanAccess(args.plan_id, allowed)
+      if (deny) return deny
+
       const { data: existing } = await supabase
         .from('workout_exercises')
         .select('order_index')
@@ -179,6 +223,9 @@ async function runTool(name, args, coachId) {
       return { exercise_id: data.id, message: `Added ${args.exercise_name}.` }
     }
     case 'update_exercise': {
+      const deny = await assertExerciseAccess(args.exercise_id, allowed)
+      if (deny) return deny
+
       const updates = {}
       if (args.exercise_name !== undefined) updates.exercise_name = args.exercise_name
       if (args.target_sets !== undefined) updates.target_sets = args.target_sets
@@ -194,6 +241,9 @@ async function runTool(name, args, coachId) {
       return { message: 'Exercise updated.' }
     }
     case 'delete_exercise': {
+      const deny = await assertExerciseAccess(args.exercise_id, allowed)
+      if (deny) return deny
+
       const { data: ex } = await supabase
         .from('workout_exercises')
         .select('exercise_name')
@@ -215,16 +265,24 @@ async function runTool(name, args, coachId) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { messages, userId, userName, isCoach, today } = req.body
+  const { messages, userId, userName, today } = req.body
   if (!messages || !userId) return res.status(400).json({ error: 'Missing required fields' })
+
+  // Build the access control set server-side — never trust isCoach from the frontend
+  const allowed = await buildAllowedIds(userId)
+  const isCoach = allowed.size > 1 // has members → is a coach
 
   const systemPrompt = `You are FitTogether's AI fitness assistant — concise, practical, and action-oriented.
 
 Today's date: ${today}
 User: ${userName} (${isCoach ? 'Coach' : 'Member'}, user_id: ${userId})
-${isCoach ? `As a coach you can manage workout plans for your members. Use list_members to find member user_ids when they refer to someone by name.` : ''}
+${isCoach ? 'As a coach you can manage workout plans for your members. Use list_members to find a member\'s user_id when they refer to someone by name.' : ''}
 
-When asked to add, change, or remove exercises, use the tools immediately — don't ask for confirmation unless something is genuinely ambiguous. After making changes, give a brief confirmation of exactly what you did.
+RULES — follow these strictly:
+1. Data access: you can only read and write data for this user${isCoach ? ' and their members' : ''}. Never access or guess other users\' data.
+2. No invention: never make up or assume exercise names, weights, reps, or any other values. Only use data retrieved from the tools or explicitly provided by the user in this conversation.
+3. Confirm before writing: before calling create_workout_plan, add_exercise, update_exercise, or delete_exercise, briefly tell the user what you are about to do and ask them to confirm. Only call the write tool after they say yes (or equivalent). Exception: if the user has already said "go ahead", "yes", or given clear prior approval in the same turn, you may proceed.
+4. After a write, confirm what was done in one short sentence.
 
 Keep responses short. No markdown headers. Bullet points are fine.`
 
@@ -261,7 +319,7 @@ Keep responses short. No markdown headers. Bullet points are fine.`
         calls.map(async call => ({
           functionResponse: {
             name: call.name,
-            response: await runTool(call.name, call.args, userId),
+            response: await runTool(call.name, call.args, userId, allowed),
           },
         }))
       )
