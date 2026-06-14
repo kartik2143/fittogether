@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { SideDrawer } from './SideDrawer'
+import { ChatWidget } from '../chat/ChatWidget'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 
@@ -55,6 +56,8 @@ export function Layout() {
       <main className="flex-1 max-w-lg mx-auto w-full px-4 py-5 pb-24">
         <Outlet />
       </main>
+
+      <ChatWidget />
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 safe-bottom">
