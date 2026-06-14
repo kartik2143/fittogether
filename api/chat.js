@@ -228,11 +228,15 @@ When asked to add, change, or remove exercises, use the tools immediately — do
 
 Keep responses short. No markdown headers. Bullet points are fine.`
 
-  // Convert our simple message format to Gemini history format
-  const history = messages.slice(0, -1).map(m => ({
-    role: m.role === 'user' ? 'user' : 'model',
-    parts: [{ text: m.text }],
-  }))
+  // Gemini requires history to start with a 'user' turn — strip any
+  // leading model messages (e.g. the UI's welcome greeting).
+  const allButLast = messages.slice(0, -1)
+  const firstUserIdx = allButLast.findIndex(m => m.role === 'user')
+  const history = (firstUserIdx === -1 ? [] : allButLast.slice(firstUserIdx))
+    .map(m => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.text }],
+    }))
   const lastMessage = messages[messages.length - 1].text
 
   try {
