@@ -9,6 +9,12 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 )
 
+function subtractDay(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() - 1)
+  return d.toISOString().slice(0, 10)
+}
+
 // ── Tool definitions ──────────────────────────────────────────
 const tools = [{
   functionDeclarations: [
@@ -16,6 +22,17 @@ const tools = [{
       name: 'list_members',
       description: 'List all members coached by this coach. Use this to find a member\'s user_id when the coach refers to them by name.',
       parameters: { type: 'OBJECT', properties: {}, required: [] },
+    },
+    {
+      name: 'get_profile',
+      description: 'Get profile details for a user: name, height, supplements list, coach info.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          user_id: { type: 'STRING' },
+        },
+        required: ['user_id'],
+      },
     },
     {
       name: 'get_workout_plan',
@@ -42,18 +59,70 @@ const tools = [{
       },
     },
     {
+      name: 'get_health_logs',
+      description: 'Get recent health logs for a user: weight, sleep hours, sleep quality, supplements taken, activity notes.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          user_id: { type: 'STRING' },
+          days: { type: 'NUMBER', description: 'How many past days to look back (default 14)' },
+        },
+        required: ['user_id'],
+      },
+    },
+    {
+      name: 'get_meal_plan',
+      description: 'Get the meal plan (breakfast, lunch, dinner, snacks) for a user on a specific date.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          user_id: { type: 'STRING' },
+          date: { type: 'STRING', description: 'YYYY-MM-DD' },
+        },
+        required: ['user_id', 'date'],
+      },
+    },
+    {
+      name: 'get_streak',
+      description: 'Get the current health log streak (consecutive days logged) for a user.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          user_id: { type: 'STRING' },
+        },
+        required: ['user_id'],
+      },
+    },
+    {
+      name: 'log_health',
+      description: 'Record or update a health log entry. Only pass the fields the user mentioned — existing fields not in the call will be preserved. Use this when the user says things like "record my weight as 82kg today" or "log that I took creatine and whey".',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          user_id: { type: 'STRING' },
+          date: { type: 'STRING', description: 'YYYY-MM-DD, defaults to today' },
+          weight_kg: { type: 'NUMBER', description: 'Weight in kilograms' },
+          sleep_hours: { type: 'NUMBER', description: 'Hours of sleep' },
+          sleep_quality: { type: 'NUMBER', description: 'Sleep quality 1 (poor) to 5 (excellent)' },
+          supplements: { type: 'ARRAY', items: { type: 'STRING' }, description: 'List of supplement names taken today' },
+          activity_notes: { type: 'STRING', description: 'Summary of physical activity (walks, gym, etc.)' },
+          health_notes: { type: 'STRING', description: 'Private health notes' },
+        },
+        required: ['user_id', 'date'],
+      },
+    },
+    {
       name: 'create_workout_plan',
       description: 'Create a new workout plan for a user on a date. Returns the new plan id.',
       parameters: {
         type: 'OBJECT',
         properties: {
           for_user_id: { type: 'STRING' },
-          created_by: { type: 'STRING', description: 'The coach or user creating this plan' },
           date: { type: 'STRING', description: 'YYYY-MM-DD' },
           description: { type: 'STRING', description: 'Title/description of the session' },
           type: { type: 'STRING', description: '"individual" (exercises by section) or "full_body"' },
         },
-        required: ['for_user_id', 'created_by', 'date', 'description'],
+        required: ['for_user_id', 'date', 'description'],
       },
     },
     {
@@ -105,8 +174,6 @@ const tools = [{
 }]
 
 // ── Server-side access control ────────────────────────────────
-// Returns the set of user_ids this requester is allowed to read/write.
-// Always includes the requester themselves; coaches also get their members.
 async function buildAllowedIds(userId) {
   const allowed = new Set([userId])
   const { data: members } = await supabase
@@ -117,7 +184,6 @@ async function buildAllowedIds(userId) {
   return allowed
 }
 
-// Resolve a plan's owner and check access
 async function assertPlanAccess(planId, allowed) {
   const { data } = await supabase
     .from('workout_plans')
@@ -129,7 +195,6 @@ async function assertPlanAccess(planId, allowed) {
   return null
 }
 
-// Resolve an exercise's plan owner and check access
 async function assertExerciseAccess(exerciseId, allowed) {
   const { data } = await supabase
     .from('workout_exercises')
@@ -142,16 +207,111 @@ async function assertExerciseAccess(exerciseId, allowed) {
   return null
 }
 
+// ── Pre-load today's context for the requesting user ──────────
+async function loadContext(userId, today) {
+  const [
+    { data: todayLog },
+    { data: weightLogs },
+    { data: todayWorkout },
+    { data: suppList },
+    { data: streakLogs },
+    { data: todayMeal },
+  ] = await Promise.all([
+    supabase.from('health_logs')
+      .select('weight_kg, sleep_hours, sleep_quality, supplements, activity_notes')
+      .eq('user_id', userId).eq('date', today).maybeSingle(),
+    supabase.from('health_logs')
+      .select('date, weight_kg').eq('user_id', userId)
+      .order('date', { ascending: false }).limit(14),
+    supabase.from('workout_plans')
+      .select('description, workout_exercises(exercise_name, target_sets, target_reps, target_weight_kg)')
+      .eq('for_user_id', userId).eq('date', today).maybeSingle(),
+    supabase.from('supplement_list')
+      .select('name').eq('user_id', userId).order('order_index'),
+    supabase.from('health_logs')
+      .select('date').eq('user_id', userId)
+      .order('date', { ascending: false }).limit(120),
+    supabase.from('meal_plans')
+      .select('breakfast, lunch, dinner, snacks')
+      .eq('for_user_id', userId).eq('date', today).maybeSingle(),
+  ])
+
+  // Compute streak
+  const dateSet = new Set(streakLogs?.map(r => r.date) || [])
+  let streak = 0
+  let cursor = today
+  while (dateSet.has(cursor)) { streak++; cursor = subtractDay(cursor) }
+  if (streak === 0) {
+    cursor = subtractDay(today)
+    while (dateSet.has(cursor)) { streak++; cursor = subtractDay(cursor) }
+  }
+
+  const lines = []
+
+  // Health log
+  if (todayLog) {
+    const parts = []
+    if (todayLog.weight_kg) parts.push(`weight ${todayLog.weight_kg}kg`)
+    if (todayLog.sleep_hours) parts.push(`sleep ${todayLog.sleep_hours}h (quality ${todayLog.sleep_quality}/5)`)
+    if (todayLog.supplements?.length) parts.push(`supplements taken: ${todayLog.supplements.join(', ')}`)
+    if (todayLog.activity_notes) parts.push(`activity: "${todayLog.activity_notes}"`)
+    lines.push(`Today's health log: ${parts.join(' | ')}`)
+  } else {
+    lines.push(`Today's health log: not logged yet`)
+  }
+
+  // Weight trend
+  const recentWeights = (weightLogs || []).filter(l => l.weight_kg).slice(0, 7)
+  if (recentWeights.length) {
+    lines.push(`Weight trend (last ${recentWeights.length} entries): ${recentWeights.map(l => `${l.date} → ${l.weight_kg}kg`).join(', ')}`)
+  }
+
+  // Today's workout
+  if (todayWorkout) {
+    const exList = (todayWorkout.workout_exercises || [])
+      .map(e => `${e.exercise_name} ${e.target_sets}×${e.target_reps || '?'}${e.target_weight_kg ? ` @${e.target_weight_kg}kg` : ''}`)
+      .join(', ')
+    lines.push(`Today's workout: ${todayWorkout.description || 'Untitled'} — ${exList || 'no exercises yet'}`)
+  } else {
+    lines.push(`Today's workout: none scheduled`)
+  }
+
+  // Today's meal plan
+  if (todayMeal) {
+    const meals = ['breakfast', 'lunch', 'dinner', 'snacks']
+      .filter(k => todayMeal[k])
+      .map(k => `${k}: ${todayMeal[k]}`)
+      .join(' | ')
+    if (meals) lines.push(`Today's meal plan: ${meals}`)
+  } else {
+    lines.push(`Today's meal plan: none set`)
+  }
+
+  lines.push(`Current streak: ${streak} day${streak !== 1 ? 's' : ''}`)
+
+  const suppNames = (suppList || []).map(s => s.name)
+  if (suppNames.length) lines.push(`Registered supplements: ${suppNames.join(', ')}`)
+
+  return lines.join('\n')
+}
+
 // ── Tool executor ─────────────────────────────────────────────
 async function runTool(name, args, requesterId, allowed) {
   switch (name) {
     case 'list_members': {
-      // Only return members of this coach — enforced by the coach_id filter
       const { data } = await supabase
         .from('profiles')
         .select('user_id, display_name, email')
         .eq('coach_id', requesterId)
       return { members: data || [] }
+    }
+    case 'get_profile': {
+      if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
+      const [{ data: profile }, { data: supps }] = await Promise.all([
+        supabase.from('profiles').select('display_name, is_coach, height_cm, date_of_birth').eq('user_id', args.user_id).single(),
+        supabase.from('supplement_list').select('name').eq('user_id', args.user_id).order('order_index'),
+      ])
+      return { profile, supplements: supps?.map(s => s.name) || [] }
     }
     case 'get_workout_plan': {
       if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
@@ -176,6 +336,79 @@ async function runTool(name, args, requesterId, allowed) {
         .gte('date', dateStr)
         .order('date', { ascending: false })
       return { plans: data || [] }
+    }
+    case 'get_health_logs': {
+      if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
+      const since = new Date()
+      since.setDate(since.getDate() - (args.days || 14))
+      const dateStr = since.toISOString().slice(0, 10)
+      const { data } = await supabase
+        .from('health_logs')
+        .select('date, weight_kg, sleep_hours, sleep_quality, supplements, activity_notes, health_notes')
+        .eq('user_id', args.user_id)
+        .gte('date', dateStr)
+        .order('date', { ascending: false })
+      return { logs: data || [] }
+    }
+    case 'get_meal_plan': {
+      if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
+      const { data } = await supabase
+        .from('meal_plans')
+        .select('breakfast, breakfast_notes, lunch, lunch_notes, dinner, dinner_notes, snacks, snacks_notes')
+        .eq('for_user_id', args.user_id)
+        .eq('date', args.date)
+        .maybeSingle()
+      return data ? { meal_plan: data } : { meal_plan: null, message: 'No meal plan for this date.' }
+    }
+    case 'get_streak': {
+      if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
+      const { data } = await supabase
+        .from('health_logs')
+        .select('date')
+        .eq('user_id', args.user_id)
+        .order('date', { ascending: false })
+        .limit(120)
+      const dateSet = new Set(data?.map(r => r.date) || [])
+      const today = new Date().toISOString().slice(0, 10)
+      let streak = 0
+      let cursor = today
+      while (dateSet.has(cursor)) { streak++; cursor = subtractDay(cursor) }
+      if (streak === 0) {
+        cursor = subtractDay(today)
+        while (dateSet.has(cursor)) { streak++; cursor = subtractDay(cursor) }
+      }
+      return { streak, message: `${streak} day streak` }
+    }
+    case 'log_health': {
+      if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
+
+      // Build only the fields the user mentioned
+      const updates = {}
+      if (args.weight_kg !== undefined) updates.weight_kg = args.weight_kg
+      if (args.sleep_hours !== undefined) updates.sleep_hours = args.sleep_hours
+      if (args.sleep_quality !== undefined) updates.sleep_quality = args.sleep_quality
+      if (args.supplements !== undefined) updates.supplements = args.supplements
+      if (args.activity_notes !== undefined) updates.activity_notes = args.activity_notes
+      if (args.health_notes !== undefined) updates.health_notes = args.health_notes
+
+      // Check if a log already exists for this date
+      const { data: existing } = await supabase
+        .from('health_logs')
+        .select('id')
+        .eq('user_id', args.user_id)
+        .eq('date', args.date)
+        .maybeSingle()
+
+      let error
+      if (existing) {
+        ;({ error } = await supabase.from('health_logs').update(updates).eq('id', existing.id))
+      } else {
+        ;({ error } = await supabase.from('health_logs').insert({ user_id: args.user_id, date: args.date, ...updates }))
+      }
+
+      if (error) return { error: error.message }
+      const summary = Object.entries(updates).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(', ')
+      return { message: `Health log ${existing ? 'updated' : 'created'} for ${args.date}: ${summary}` }
     }
     case 'create_workout_plan': {
       if (!allowed.has(args.for_user_id)) return { error: 'Access denied.' }
@@ -268,26 +501,33 @@ export default async function handler(req, res) {
   const { messages, userId, userName, today } = req.body
   if (!messages || !userId) return res.status(400).json({ error: 'Missing required fields' })
 
-  // Build the access control set server-side — never trust isCoach from the frontend
-  const allowed = await buildAllowedIds(userId)
-  const isCoach = allowed.size > 1 // has members → is a coach
+  // Build access control + load today's context in parallel
+  const [allowed, context] = await Promise.all([
+    buildAllowedIds(userId),
+    loadContext(userId, today),
+  ])
+  const isCoach = allowed.size > 1
 
   const systemPrompt = `You are FitTogether's AI fitness assistant — concise, practical, and action-oriented.
 
 Today's date: ${today}
 User: ${userName} (${isCoach ? 'Coach' : 'Member'}, user_id: ${userId})
-${isCoach ? 'As a coach you can manage workout plans for your members. Use list_members to find a member\'s user_id when they refer to someone by name.' : ''}
+${isCoach ? 'As a coach you can manage workout plans and read data for your members. Use list_members to find a member\'s user_id when they refer to someone by name.' : ''}
+
+=== ${userName}'s snapshot for today ===
+${context}
+===
 
 RULES — follow these strictly:
 1. Data access: you can only read and write data for this user${isCoach ? ' and their members' : ''}. Never access or guess other users\' data.
-2. No invention: never make up or assume exercise names, weights, reps, or any other values. Only use data retrieved from the tools or explicitly provided by the user in this conversation.
-3. Confirm before writing: before calling create_workout_plan, add_exercise, update_exercise, or delete_exercise, briefly tell the user what you are about to do and ask them to confirm. Only call the write tool after they say yes (or equivalent). Exception: if the user has already said "go ahead", "yes", or given clear prior approval in the same turn, you may proceed.
-4. After a write, confirm what was done in one short sentence.
+2. No invention: never make up or assume any values (weights, foods, exercises, etc.). Only use data from the tools or explicitly stated by the user in this conversation.
+3. Confirm before any write (log_health, create_workout_plan, add_exercise, update_exercise, delete_exercise): briefly state what you are about to do and ask for confirmation. Only execute after the user says yes. Exception: if the user's message itself is the explicit instruction ("record my weight as 82kg"), that counts as confirmation — proceed directly.
+4. After every write, confirm in one short sentence what was saved.
+5. Use the snapshot above to answer questions without calling extra tools when possible.
 
 Keep responses short. No markdown headers. Bullet points are fine.`
 
-  // Gemini requires history to start with a 'user' turn — strip any
-  // leading model messages (e.g. the UI's welcome greeting).
+  // Gemini requires history to start with a 'user' turn
   const allButLast = messages.slice(0, -1)
   const firstUserIdx = allButLast.findIndex(m => m.role === 'user')
   const history = (firstUserIdx === -1 ? [] : allButLast.slice(firstUserIdx))
@@ -306,7 +546,6 @@ Keep responses short. No markdown headers. Bullet points are fine.`
 
     const chat = model.startChat({ history })
 
-    // Agentic loop — keep running tool calls until Gemini returns text
     let result = await chat.sendMessage(lastMessage)
     let iterations = 0
 

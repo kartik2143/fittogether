@@ -6,7 +6,7 @@ export function ChatWidget() {
   const { profile } = useAuth()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'model', text: `Hey ${profile?.display_name?.split(' ')[0] || 'there'} 👋 I can add or change exercises, check your recent workouts, or answer questions. What do you need?` }
+    { role: 'model', text: `Hey ${profile?.display_name?.split(' ')[0] || 'there'} 👋 I know your workouts, health logs, meals, and supplements. Ask me anything or say something like "log my weight as 82kg" or "add a set to bench press". What do you need?` }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -105,13 +105,13 @@ export function ChatWidget() {
               <p className="text-[10px] text-green-100">Powered by Gemini</p>
             </div>
             <button
-              onClick={() => setMessages([{
-                role: 'model',
-                text: `Hey ${profile?.display_name?.split(' ')[0] || 'there'} 👋 I can add or change exercises, check your recent workouts, or answer questions. What do you need?`
-              }])}
-              className="ml-auto text-[10px] text-green-200 hover:text-white"
+              onClick={() => setOpen(false)}
+              className="ml-auto w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label="Close"
             >
-              Clear
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
