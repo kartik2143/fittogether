@@ -40,7 +40,6 @@ export function ChatWidget() {
           messages: newMessages,
           userId: profile.user_id,
           userName: profile.display_name,
-          isCoach: profile.is_coach,
           today: todayStr(),
         }),
       })

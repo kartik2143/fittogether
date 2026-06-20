@@ -210,34 +210,32 @@ async function assertExerciseAccess(exerciseId, allowed) {
 // ── Pre-load today's context for the requesting user ──────────
 async function loadContext(userId, today) {
   const [
-    { data: todayLog },
-    { data: weightLogs },
+    { data: healthLogs },
     { data: todayWorkout },
     { data: suppList },
-    { data: streakLogs },
     { data: todayMeal },
   ] = await Promise.all([
+    // One pass over health_logs covers today's log, weight trend, and streak.
     supabase.from('health_logs')
-      .select('weight_kg, sleep_hours, sleep_quality, supplements, activity_notes')
-      .eq('user_id', userId).eq('date', today).maybeSingle(),
-    supabase.from('health_logs')
-      .select('date, weight_kg').eq('user_id', userId)
-      .order('date', { ascending: false }).limit(14),
+      .select('date, weight_kg, sleep_hours, sleep_quality, supplements, activity_notes')
+      .eq('user_id', userId)
+      .order('date', { ascending: false }).limit(120),
     supabase.from('workout_plans')
       .select('description, workout_exercises(exercise_name, target_sets, target_reps, target_weight_kg)')
       .eq('for_user_id', userId).eq('date', today).maybeSingle(),
     supabase.from('supplement_list')
       .select('name').eq('user_id', userId).order('order_index'),
-    supabase.from('health_logs')
-      .select('date').eq('user_id', userId)
-      .order('date', { ascending: false }).limit(120),
     supabase.from('meal_plans')
       .select('breakfast, lunch, dinner, snacks')
       .eq('for_user_id', userId).eq('date', today).maybeSingle(),
   ])
 
+  const logs = healthLogs || []
+  const todayLog = logs.find(l => l.date === today) || null
+  const weightLogs = logs
+
   // Compute streak
-  const dateSet = new Set(streakLogs?.map(r => r.date) || [])
+  const dateSet = new Set(logs.map(r => r.date))
   let streak = 0
   let cursor = today
   while (dateSet.has(cursor)) { streak++; cursor = subtractDay(cursor) }
@@ -296,7 +294,7 @@ async function loadContext(userId, today) {
 }
 
 // ── Tool executor ─────────────────────────────────────────────
-async function runTool(name, args, requesterId, allowed) {
+async function runTool(name, args, requesterId, allowed, today) {
   switch (name) {
     case 'list_members': {
       const { data } = await supabase
@@ -369,7 +367,6 @@ async function runTool(name, args, requesterId, allowed) {
         .order('date', { ascending: false })
         .limit(120)
       const dateSet = new Set(data?.map(r => r.date) || [])
-      const today = new Date().toISOString().slice(0, 10)
       let streak = 0
       let cursor = today
       while (dateSet.has(cursor)) { streak++; cursor = subtractDay(cursor) }
@@ -501,6 +498,7 @@ export default async function handler(req, res) {
   const { messages, userId, userName, today } = req.body
   if (!messages || !userId) return res.status(400).json({ error: 'Missing required fields' })
 
+  try {
   // Build access control + load today's context in parallel
   const [allowed, context] = await Promise.all([
     buildAllowedIds(userId),
@@ -537,7 +535,6 @@ Keep responses short. No markdown headers. Bullet points are fine.`
     }))
   const lastMessage = messages[messages.length - 1].text
 
-  try {
     const model = genAI.getGenerativeModel({
       model: 'gemini-3.1-flash-lite',
       tools,
@@ -558,7 +555,7 @@ Keep responses short. No markdown headers. Bullet points are fine.`
         calls.map(async call => ({
           functionResponse: {
             name: call.name,
-            response: await runTool(call.name, call.args, userId, allowed),
+            response: await runTool(call.name, call.args, userId, allowed, today),
           },
         }))
       )
