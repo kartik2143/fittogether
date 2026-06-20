@@ -12,10 +12,10 @@ export function Modal({ open, onClose, title, children }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">{title}</h2>
+      <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-lift border border-gray-200/60">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h2 className="font-bold text-gray-900 text-[17px]">{title}</h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"

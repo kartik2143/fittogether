@@ -32,21 +32,21 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Top bar */}
-      <header className="sticky top-0 z-20 bg-white border-b border-gray-100 px-4 h-14 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="FitTogether" className="w-7 h-7" />
-          <span className="font-bold text-gray-900 text-base">FitTogether</span>
+      <header className="sticky top-0 z-20 bg-gray-50/80 backdrop-blur-md border-b border-gray-200/60 px-4 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <img src="/logo.svg" alt="FitTogether" className="w-8 h-8" />
+          <span className="font-extrabold text-gray-900 text-[17px] tracking-tight">FitTogether</span>
         </div>
         <button
           onClick={() => setDrawerOpen(true)}
-          className="relative p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+          className="relative p-2 rounded-xl text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors"
           aria-label="Open menu"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
           {pendingCount > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-brand-600 ring-2 ring-gray-50" />
           )}
         </button>
       </header>
@@ -60,22 +60,24 @@ export function Layout() {
       <ChatWidget />
 
       {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-100 safe-bottom">
-        <div className="max-w-lg mx-auto flex items-center">
+      <nav className="fixed bottom-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-md border-t border-gray-200/60 safe-bottom">
+        <div className="max-w-lg mx-auto flex items-center px-2">
           {bottomNav.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex-1 flex flex-col items-center gap-0.5 py-2 transition-colors
+                `flex-1 flex flex-col items-center gap-1 py-2 transition-colors
                 ${isActive ? 'text-brand-600' : 'text-gray-400 hover:text-gray-600'}`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon active={isActive} />
-                  <span className="text-[10px] font-medium">{label}</span>
+                  <span className={`flex items-center justify-center w-11 h-7 rounded-full transition-colors ${isActive ? 'bg-brand-50' : ''}`}>
+                    <Icon active={isActive} />
+                  </span>
+                  <span className="text-[10px] font-semibold tracking-tight">{label}</span>
                 </>
               )}
             </NavLink>

@@ -65,7 +65,7 @@ export default function MyProgress() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold text-gray-900">📈 My Progress</h1>
+      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">📈 My Progress</h1>
 
       {/* Weight chart */}
       <Card className="p-4">
@@ -93,8 +93,8 @@ export default function MyProgress() {
         <SleepChart logs={last30} />
         <div className="flex gap-3 mt-2 flex-wrap">
           {[
-            ['#ef4444', 'Poor (1)'], ['#f97316', '(2)'], ['#eab308', 'OK (3)'],
-            ['#84cc16', 'Good (4)'], ['#22c55e', 'Great (5)'],
+            ['#d1453b', 'Poor (1)'], ['#dd7a3a', '(2)'], ['#d9a441', 'OK (3)'],
+            ['#8aa05a', 'Good (4)'], ['#5f7850', 'Great (5)'],
           ].map(([color, label]) => (
             <div key={label} className="flex items-center gap-1">
               <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />

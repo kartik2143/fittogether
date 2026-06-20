@@ -3,7 +3,7 @@ import {
 } from 'recharts'
 import { formatDateShort } from '../../utils/dateUtils'
 
-const qualityColors = ['', '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e']
+const qualityColors = ['', '#d1453b', '#dd7a3a', '#d9a441', '#8aa05a', '#5f7850']
 
 export function SleepChart({ logs }) {
   const data = [...logs]

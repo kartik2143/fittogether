@@ -112,7 +112,7 @@ export default function Settings() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold text-gray-900">⚙️ Settings</h1>
+      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">⚙️ Settings</h1>
 
       {/* Incoming coach requests (for coaches) */}
       {incoming.length > 0 && (
@@ -274,7 +274,7 @@ export default function Settings() {
             placeholder="friend@example.com"
           />
           {friendMsg && (
-            <p className={`text-sm rounded-lg px-3 py-2 ${friendMsg.includes('sent') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+            <p className={`text-sm rounded-lg px-3 py-2 ${friendMsg.includes('sent') ? 'bg-sage-50 text-sage-700' : 'bg-red-50 text-red-600'}`}>
               {friendMsg}
             </p>
           )}
@@ -296,7 +296,7 @@ export default function Settings() {
             placeholder="coach@example.com"
           />
           {coachMsg && (
-            <p className={`text-sm rounded-lg px-3 py-2 ${coachMsg.includes('sent') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+            <p className={`text-sm rounded-lg px-3 py-2 ${coachMsg.includes('sent') ? 'bg-sage-50 text-sage-700' : 'bg-red-50 text-red-600'}`}>
               {coachMsg}
             </p>
           )}

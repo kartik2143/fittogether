@@ -100,7 +100,7 @@ export default function ProfileView() {
           </div>
           <div className="flex items-center gap-1 mt-2">
             <span className="text-base">🔥</span>
-            <span className="text-sm font-bold text-orange-600">{streak} day streak</span>
+            <span className="text-sm font-bold text-brand-600">{streak} day streak</span>
           </div>
         </div>
       </Card>

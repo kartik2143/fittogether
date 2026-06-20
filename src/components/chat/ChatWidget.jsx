@@ -101,7 +101,7 @@ export function ChatWidget() {
             </div>
             <div>
               <p className="text-sm font-semibold text-white leading-tight">FitTogether AI</p>
-              <p className="text-[10px] text-green-100">Powered by Gemini</p>
+              <p className="text-[10px] text-white/70">Powered by Gemini</p>
             </div>
             <button
               onClick={() => setOpen(false)}

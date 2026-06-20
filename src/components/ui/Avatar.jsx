@@ -15,14 +15,14 @@ export function Avatar({ src, name, size = 'md', className = '' }) {
       <img
         src={src}
         alt={name || 'Avatar'}
-        className={`${sizes[size]} rounded-full object-cover flex-shrink-0 ${className}`}
+        className={`${sizes[size]} rounded-full object-cover flex-shrink-0 ring-1 ring-gray-900/5 ${className}`}
       />
     )
   }
 
   return (
     <div
-      className={`${sizes[size]} rounded-full bg-brand-100 text-brand-700 font-semibold flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`${sizes[size]} rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center flex-shrink-0 ring-1 ring-brand-600/10 ${className}`}
     >
       {initials}
     </div>

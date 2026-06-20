@@ -72,7 +72,7 @@ export default function DailyWorkoutTracker() {
           ← Back to {memberName}'s profile
         </Link>
       )}
-      <h1 className="text-xl font-bold text-gray-900">
+      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
         💪 {isCoachMode ? `${memberName}'s Workout` : "Today's Workout"}
       </h1>
 
@@ -129,9 +129,9 @@ export default function DailyWorkoutTracker() {
             })}
 
             {plan.cardio_type && (
-              <div className="bg-blue-50 rounded-xl px-3 py-2 text-sm">
-                <span className="font-medium text-blue-700">Cardio: </span>
-                <span className="text-blue-600">
+              <div className="bg-brand-50 border border-brand-100 rounded-xl px-3 py-2 text-sm">
+                <span className="font-semibold text-brand-700">Cardio: </span>
+                <span className="text-brand-700/80">
                   {plan.cardio_type}
                   {plan.cardio_duration_mins && ` · ${plan.cardio_duration_mins} mins`}
                   {plan.cardio_notes && ` · ${plan.cardio_notes}`}

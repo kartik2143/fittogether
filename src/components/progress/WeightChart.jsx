@@ -24,7 +24,7 @@ export function WeightChart({ logs }) {
           tickFormatter={v => `${v}kg`}
         />
         <Tooltip formatter={v => [`${v} kg`, 'Weight']} />
-        <Line type="monotone" dataKey="weight" stroke="#16a34a" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+        <Line type="monotone" dataKey="weight" stroke="#b4502f" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
       </LineChart>
     </ResponsiveContainer>
   )

@@ -62,7 +62,7 @@ export default function DailyDietTracker() {
           ← Back to {memberName}'s profile
         </Link>
       )}
-      <h1 className="text-xl font-bold text-gray-900">
+      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
         🥗 {isCoachMode ? `${memberName}'s Diet` : "Today's Diet"}
       </h1>
 

@@ -13,9 +13,9 @@ import { supabase } from '../lib/supabase'
 import { useEffect, useState } from 'react'
 
 const quickActions = [
-  { to: '/health',  emoji: '📋', label: "Log Today's Health",   color: 'from-blue-500 to-blue-600' },
-  { to: '/workout', emoji: '💪', label: "Today's Workout",      color: 'from-brand-500 to-brand-600' },
-  { to: '/diet',    emoji: '🥗', label: "Today's Diet",         color: 'from-orange-400 to-orange-500' },
+  { to: '/health',  emoji: '📋', label: "Log today's health", desc: 'Weight, sleep, supplements', tint: 'bg-brand-50 text-brand-700' },
+  { to: '/workout', emoji: '💪', label: "Today's workout",     desc: 'Plan and log your session',  tint: 'bg-sage-100 text-sage-700' },
+  { to: '/diet',    emoji: '🥗', label: "Today's diet",        desc: 'Meals and nutrition',        tint: 'bg-amber-100 text-amber-800' },
 ]
 
 export default function Dashboard() {
@@ -39,12 +39,15 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Avatar src={profile?.avatar_url} name={profile?.display_name} size="lg" />
-        <div>
-          <p className="text-sm text-gray-500">Hey there,</p>
-          <h1 className="text-xl font-bold text-gray-900">{profile?.display_name} 👋</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{formatDate(today)}</p>
+      <div className="relative overflow-hidden rounded-3xl bg-white border border-gray-200/70 shadow-card px-5 py-5 bg-warm-wash">
+        <div className="flex items-center gap-3.5">
+          <Avatar src={profile?.avatar_url} name={profile?.display_name} size="lg" />
+          <div className="min-w-0">
+            <p className="text-[13px] text-gray-500 font-medium">{formatDate(today)}</p>
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight truncate">
+              Hi, {profile?.display_name?.split(' ')[0] || 'there'}
+            </h1>
+          </div>
         </div>
       </div>
 
@@ -52,13 +55,16 @@ export default function Dashboard() {
       <StreakCounter userId={profile?.user_id} />
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 gap-3">
-        {quickActions.map(({ to, emoji, label, color }) => (
-          <Link key={to} to={to}>
-            <div className={`bg-gradient-to-r ${color} text-white rounded-2xl px-5 py-4 flex items-center gap-4 shadow-sm active:scale-95 transition-transform`}>
-              <span className="text-3xl">{emoji}</span>
-              <span className="font-semibold text-base">{label}</span>
-              <svg className="w-5 h-5 ml-auto opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex flex-col gap-2.5">
+        {quickActions.map(({ to, emoji, label, desc, tint }) => (
+          <Link key={to} to={to} className="group">
+            <div className="bg-white border border-gray-200/70 shadow-card rounded-2xl px-4 py-3.5 flex items-center gap-3.5 active:scale-[0.99] transition-transform">
+              <span className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl ${tint}`}>{emoji}</span>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-gray-900 text-[15px] leading-tight">{label}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+              </div>
+              <svg className="w-5 h-5 text-gray-300 group-hover:text-gray-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>

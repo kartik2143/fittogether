@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'FitTogether',
         short_name: 'FitTogether',
         description: 'Track workouts, health, and diet with your coach',
-        theme_color: '#16a34a',
-        background_color: '#f9fafb',
+        theme_color: '#b4502f',
+        background_color: '#f7f4ef',
         display: 'standalone',
         start_url: '/',
         icons: [

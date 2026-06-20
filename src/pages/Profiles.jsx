@@ -45,7 +45,7 @@ export default function Profiles() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold text-gray-900">👥 Profiles</h1>
+      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">👥 Profiles</h1>
 
       {isLoading ? (
         <div className="flex flex-col gap-3">
@@ -124,7 +124,7 @@ function ProfileCard({ profile, isMe }) {
         </div>
         <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
           <span className="text-base">🔥</span>
-          <span className="text-sm font-bold text-orange-600">{streak}</span>
+          <span className="text-sm font-bold text-brand-600">{streak}</span>
         </div>
       </Card>
     </Link>

@@ -53,15 +53,15 @@ export default function Login() {
       <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 pt-16">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <img src="/logo.svg" alt="FitTogether" className="w-14 h-14 mx-auto mb-3" />
-            <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
+            <img src="/logo.svg" alt="FitTogether" className="w-16 h-16 mx-auto mb-4 shadow-soft rounded-[18px]" />
+            <h1 className="text-[26px] font-extrabold text-gray-900 tracking-tight">Check your email</h1>
             <p className="text-gray-500 text-sm mt-2">
               We sent a 6-digit code to<br />
               <span className="font-medium text-gray-800">{email}</span>
             </p>
           </div>
 
-          <form onSubmit={handleVerifyOtp} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+          <form onSubmit={handleVerifyOtp} className="bg-white rounded-3xl shadow-soft border border-gray-200/70 p-6 flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-gray-700 text-center">Verification code</label>
               <input
@@ -107,12 +107,12 @@ export default function Login() {
     <div className="min-h-screen flex items-start justify-center bg-gray-50 px-4 pt-16">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="FitTogether" className="w-14 h-14 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+          <img src="/logo.svg" alt="FitTogether" className="w-16 h-16 mx-auto mb-4 shadow-soft rounded-[18px]" />
+          <h1 className="text-[26px] font-extrabold text-gray-900 tracking-tight">Welcome back</h1>
           <p className="text-gray-500 text-sm mt-1">Sign in to FitTogether</p>
         </div>
 
-        <form onSubmit={handleSendOtp} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+        <form onSubmit={handleSendOtp} className="bg-white rounded-3xl shadow-soft border border-gray-200/70 p-6 flex flex-col gap-4">
           <Input
             label="Email"
             type="email"

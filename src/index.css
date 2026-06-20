@@ -7,12 +7,27 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    letter-spacing: -0.011em;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+  ::selection {
+    background-color: #f4e2d8;
+    color: #5c2b1e;
   }
 }
 
 @layer utilities {
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Subtle grain-free warm backdrop wash used behind hero areas */
+  .bg-warm-wash {
+    background:
+      radial-gradient(120% 90% at 100% 0%, rgba(180,80,47,0.06) 0%, transparent 55%),
+      radial-gradient(90% 80% at 0% 0%, rgba(132,120,100,0.07) 0%, transparent 50%);
   }
 }

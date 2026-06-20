@@ -57,7 +57,7 @@ export default function DailyHealthTracker() {
           ← Back to {memberName}'s profile
         </Link>
       )}
-      <h1 className="text-xl font-bold text-gray-900">
+      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
         📋 {isCoachMode ? `${memberName}'s Health Log` : 'Daily Health Log'}
       </h1>
 
