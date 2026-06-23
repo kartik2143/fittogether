@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../ui/Button'
 import { Input, Textarea, Select } from '../ui/Input'
+import { useExerciseLibrary } from '../../hooks/useExerciseLibrary'
+import { ExercisePicker } from './ExercisePicker'
 
 const SECTIONS = [
   { key: 'warmup',   label: 'Warm-up',      emoji: '🔥', hint: 'Stretching, light cardio, mobility' },
@@ -36,6 +38,10 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
   const [cardioNotes, setCardioNotes] = useState(existing?.cardio_notes ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [pickerSection, setPickerSection] = useState(null)
+
+  // Library belongs to the person the plan is for (their favourites + history).
+  const library = useExerciseLibrary(forUserId)
 
   function exercisesForSection(section) {
     return exercises.filter(e => e.section === section)
@@ -47,6 +53,18 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
 
   function addExercise(section) {
     setExercises(ex => [...ex, emptyExercise(section)])
+  }
+
+  function addFromTemplate(section, tpl) {
+    setExercises(ex => [...ex, {
+      _key: Math.random(),
+      section,
+      exercise_name: tpl.exercise_name || '',
+      youtube_url: tpl.youtube_url || '',
+      target_sets: tpl.target_sets ?? '',
+      target_reps: tpl.target_reps ?? '',
+      target_weight_kg: tpl.target_weight_kg ?? '',
+    }])
   }
 
   function removeExercise(key) {
@@ -138,9 +156,23 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
                   <div key={ex._key} className="border border-gray-100 rounded-2xl p-3 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-medium text-gray-400">Exercise {idx + 1}</p>
-                      {sectionExercises.length > (key === 'main' ? 1 : 0) && (
-                        <button type="button" onClick={() => removeExercise(ex._key)} className="text-xs text-red-400 hover:text-red-600">Remove</button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {ex.exercise_name.trim() && (
+                          <button
+                            type="button"
+                            onClick={() => library.toggleFavorite(ex)}
+                            aria-label={library.isFavorite(ex.exercise_name) ? 'Remove from favourites' : 'Save to favourites'}
+                            className={`transition-colors ${library.isFavorite(ex.exercise_name) ? 'text-brand-500' : 'text-gray-300 hover:text-gray-400'}`}
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill={library.isFavorite(ex.exercise_name) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={library.isFavorite(ex.exercise_name) ? 0 : 1.8}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.5a.56.56 0 011.04 0l2.12 4.92 5.34.46c.5.04.7.66.32.99l-4.05 3.5 1.21 5.22c.11.49-.42.87-.85.61L12 16.9l-4.61 2.8c-.43.26-.96-.12-.85-.61l1.21-5.22-4.05-3.5a.56.56 0 01.32-.99l5.34-.46 2.12-4.92z" />
+                            </svg>
+                          </button>
+                        )}
+                        {sectionExercises.length > (key === 'main' ? 1 : 0) && (
+                          <button type="button" onClick={() => removeExercise(ex._key)} className="text-xs text-red-400 hover:text-red-600">Remove</button>
+                        )}
+                      </div>
                     </div>
                     <Input placeholder="Exercise name" value={ex.exercise_name} onChange={e => updateExercise(ex._key, 'exercise_name', e.target.value)} />
                     <Input placeholder="YouTube reference URL (optional)" type="url" value={ex.youtube_url} onChange={e => updateExercise(ex._key, 'youtube_url', e.target.value)} />
@@ -152,13 +184,25 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
                   </div>
                 ))}
 
-                <button
-                  type="button"
-                  onClick={() => addExercise(key)}
-                  className="text-sm text-brand-600 font-medium hover:underline text-left"
-                >
-                  + Add {label.toLowerCase()} exercise
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setPickerSection(key)}
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-xl px-3 py-1.5 transition-colors"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h7" />
+                    </svg>
+                    Pick from your exercises
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addExercise(key)}
+                    className="text-sm text-gray-500 font-medium hover:text-gray-700 px-2 py-1.5"
+                  >
+                    + Add blank
+                  </button>
+                </div>
               </div>
             )
           })}
@@ -183,6 +227,16 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
       <Button type="submit" loading={loading} size="lg" className="w-full">
         {existing ? 'Update plan' : 'Save plan'}
       </Button>
+
+      <ExercisePicker
+        open={pickerSection !== null}
+        onClose={() => setPickerSection(null)}
+        onPick={(tpl) => addFromTemplate(pickerSection, tpl)}
+        favorites={library.favorites}
+        history={library.history}
+        isFavorite={library.isFavorite}
+        onToggleFavorite={library.toggleFavorite}
+      />
     </form>
   )
 }
