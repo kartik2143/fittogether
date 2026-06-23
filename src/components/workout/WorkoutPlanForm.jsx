@@ -22,9 +22,7 @@ const emptyExercise = (section) => ({
 })
 
 function buildInitialExercises(existing) {
-  if (!existing?.length) {
-    return [emptyExercise('main')]
-  }
+  if (!existing?.length) return []
   return existing.map(e => ({ ...e, _key: e.id }))
 }
 
@@ -36,6 +34,7 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
   const [cardioType, setCardioType] = useState(existing?.cardio_type ?? '')
   const [cardioDuration, setCardioDuration] = useState(existing?.cardio_duration_mins ?? '')
   const [cardioNotes, setCardioNotes] = useState(existing?.cardio_notes ?? '')
+  const [showCardio, setShowCardio] = useState(!!(existing?.cardio_type || existing?.cardio_duration_mins || existing?.cardio_notes))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [pickerSection, setPickerSection] = useState(null)
@@ -169,9 +168,7 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
                             </svg>
                           </button>
                         )}
-                        {sectionExercises.length > (key === 'main' ? 1 : 0) && (
-                          <button type="button" onClick={() => removeExercise(ex._key)} className="text-xs text-red-400 hover:text-red-600">Remove</button>
-                        )}
+                        <button type="button" onClick={() => removeExercise(ex._key)} className="text-xs text-red-400 hover:text-red-600">Remove</button>
                       </div>
                     </div>
                     <Input placeholder="Exercise name" value={ex.exercise_name} onChange={e => updateExercise(ex._key, 'exercise_name', e.target.value)} />
@@ -214,12 +211,25 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm text-gray-700">🚴 Cardio (optional)</span>
           <div className="flex-1 h-px bg-gray-100" />
+          {!showCardio && (
+            <button
+              type="button"
+              onClick={() => setShowCardio(true)}
+              className="text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-xl px-3 py-1.5 transition-colors flex-shrink-0"
+            >
+              + Add cardio
+            </button>
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Type (e.g. incline walk)" value={cardioType} onChange={e => setCardioType(e.target.value)} />
-          <Input placeholder="Duration (mins)" type="number" value={cardioDuration} onChange={e => setCardioDuration(e.target.value)} />
-        </div>
-        <Input placeholder="Intensity / notes" value={cardioNotes} onChange={e => setCardioNotes(e.target.value)} />
+        {showCardio && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="Type (e.g. incline walk)" value={cardioType} onChange={e => setCardioType(e.target.value)} />
+              <Input placeholder="Duration (mins)" type="number" value={cardioDuration} onChange={e => setCardioDuration(e.target.value)} />
+            </div>
+            <Input placeholder="Intensity / notes" value={cardioNotes} onChange={e => setCardioNotes(e.target.value)} />
+          </>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
