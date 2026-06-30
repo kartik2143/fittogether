@@ -92,7 +92,8 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
       const { error: err } = await supabase.from('workout_plans').update(planPayload).eq('id', existing.id)
       if (err) { setError(err.message); setLoading(false); return }
       planId = existing.id
-      await supabase.from('workout_exercises').delete().eq('plan_id', planId)
+      const { error: delErr } = await supabase.from('workout_exercises').delete().eq('plan_id', planId)
+      if (delErr) { setError(delErr.message); setLoading(false); return }
     } else {
       const { data, error: err } = await supabase.from('workout_plans').insert(planPayload).select().single()
       if (err) { setError(err.message); setLoading(false); return }
@@ -118,7 +119,8 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
             order_index: sectionOrder[e.section] * 100 + idx,
           }
         })
-        await supabase.from('workout_exercises').insert(exPayload)
+        const { error: exErr } = await supabase.from('workout_exercises').insert(exPayload)
+        if (exErr) { setError(exErr.message); setLoading(false); return }
       }
     }
 
