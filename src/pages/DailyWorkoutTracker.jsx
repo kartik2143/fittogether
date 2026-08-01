@@ -3,7 +3,9 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useWorkoutPlan } from '../hooks/useWorkoutPlan'
+import { useExerciseLibrary } from '../hooks/useExerciseLibrary'
 import { WorkoutPlanForm } from '../components/workout/WorkoutPlanForm'
+import { ExerciseManager } from '../components/workout/ExerciseManager'
 import { WorkoutLogForm } from '../components/workout/WorkoutLogForm'
 import { ExerciseRow } from '../components/workout/ExerciseRow'
 import { YouTubeEmbed } from '../components/workout/YouTubeEmbed'
@@ -35,6 +37,11 @@ export default function DailyWorkoutTracker() {
   const [memberName, setMemberName] = useState('')
   const [editingPlan, setEditingPlan] = useState(false)
   const [editingLog, setEditingLog] = useState(false)
+  const [managingLibrary, setManagingLibrary] = useState(false)
+
+  // Held at the page level so the plan form's picker and the manager sheet
+  // share one copy — editing in the manager updates the picker immediately.
+  const library = useExerciseLibrary(targetUserId)
 
   // Reset editing when date changes
   useEffect(() => { setEditingPlan(false); setEditingLog(false) }, [selectedDate])
@@ -72,9 +79,20 @@ export default function DailyWorkoutTracker() {
           ← Back to {memberName}'s profile
         </Link>
       )}
-      <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-        💪 {isCoachMode ? `${memberName}'s Workout` : "Today's Workout"}
-      </h1>
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+          💪 {isCoachMode ? `${memberName}'s Workout` : "Today's Workout"}
+        </h1>
+        <button
+          onClick={() => setManagingLibrary(true)}
+          className="flex-shrink-0 mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-xl px-3 py-2 transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h10M4 18h7" />
+          </svg>
+          Exercises
+        </button>
+      </div>
 
       <DateNavigator date={selectedDate} onChange={setSelectedDate} />
 
@@ -97,6 +115,8 @@ export default function DailyWorkoutTracker() {
             existing={editingPlan ? plan : undefined}
             existingExercises={editingPlan ? exercises : undefined}
             onSaved={handlePlanSaved}
+            library={library}
+            onManageLibrary={() => setManagingLibrary(true)}
           />
         ) : (
           <div className="flex flex-col gap-3">
@@ -129,13 +149,27 @@ export default function DailyWorkoutTracker() {
             })}
 
             {plan.cardio_type && (
-              <div className="bg-brand-50 border border-brand-100 rounded-xl px-3 py-2 text-sm">
-                <span className="font-semibold text-brand-700">Cardio: </span>
-                <span className="text-brand-700/80">
-                  {plan.cardio_type}
-                  {plan.cardio_duration_mins && ` · ${plan.cardio_duration_mins} mins`}
-                  {plan.cardio_notes && ` · ${plan.cardio_notes}`}
-                </span>
+              <div className="mt-1 rounded-2xl border border-brand-200/70 bg-brand-50 p-4">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="text-lg leading-none">🚴</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-brand-700/70">
+                    Cardio
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <p className="text-xl font-extrabold text-brand-900 tracking-tight leading-tight">
+                    {plan.cardio_type}
+                  </p>
+                  {plan.cardio_duration_mins && (
+                    <p className="text-xl font-extrabold text-brand-700 tabular-nums leading-tight">
+                      {plan.cardio_duration_mins}
+                      <span className="text-sm font-bold"> mins</span>
+                    </p>
+                  )}
+                </div>
+                {plan.cardio_notes && (
+                  <p className="text-sm font-medium text-brand-800/75 mt-1.5">{plan.cardio_notes}</p>
+                )}
               </div>
             )}
           </div>
@@ -182,6 +216,13 @@ export default function DailyWorkoutTracker() {
           )}
         </Card>
       )}
+
+      <ExerciseManager
+        open={managingLibrary}
+        onClose={() => setManagingLibrary(false)}
+        library={library}
+        ownerName={isCoachMode ? memberName : null}
+      />
     </div>
   )
 }

@@ -1,13 +1,5 @@
 import { useState } from 'react'
-
-function metaLine(ex) {
-  const parts = []
-  if (ex.target_sets) parts.push(`${ex.target_sets}${ex.target_reps ? `×${ex.target_reps}` : ' sets'}`)
-  else if (ex.target_reps) parts.push(`${ex.target_reps} reps`)
-  if (ex.target_weight_kg) parts.push(`@ ${ex.target_weight_kg}kg`)
-  if (ex.youtube_url) parts.push('▸ video')
-  return parts.join(' ')
-}
+import { metaLine } from '../../utils/exerciseFormat'
 
 const rowKey = (ex) => (ex.id ? `f${ex.id}` : `h${(ex.exercise_name || '').toLowerCase()}`)
 
@@ -19,7 +11,7 @@ function StarIcon({ filled }) {
   )
 }
 
-export function ExercisePicker({ open, onClose, onPick, favorites, history, isFavorite, onToggleFavorite }) {
+export function ExercisePicker({ open, onClose, onPick, favorites, history, isFavorite, onToggleFavorite, onManage }) {
   const [query, setQuery] = useState('')
   const [added, setAdded] = useState(() => new Set())
 
@@ -76,6 +68,15 @@ export function ExercisePicker({ open, onClose, onPick, favorites, history, isFa
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-200" />
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-gray-900 text-[17px]">Add exercise</h2>
+            {onManage && (
+              <button
+                type="button"
+                onClick={onManage}
+                className="ml-auto mr-1 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg px-2.5 py-1.5 transition-colors"
+              >
+                Manage
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}

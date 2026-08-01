@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../ui/Button'
 import { Input, Textarea, Select } from '../ui/Input'
-import { useExerciseLibrary } from '../../hooks/useExerciseLibrary'
 import { ExercisePicker } from './ExercisePicker'
 
 const SECTIONS = [
@@ -26,7 +25,7 @@ function buildInitialExercises(existing) {
   return existing.map(e => ({ ...e, _key: e.id }))
 }
 
-export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existingExercises, onSaved }) {
+export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existingExercises, onSaved, library, onManageLibrary }) {
   const [type, setType] = useState(existing?.type ?? 'individual')
   const [youtubeUrl, setYoutubeUrl] = useState(existing?.youtube_url ?? '')
   const [description, setDescription] = useState(existing?.description ?? '')
@@ -38,9 +37,6 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [pickerSection, setPickerSection] = useState(null)
-
-  // Library belongs to the person the plan is for (their favourites + history).
-  const library = useExerciseLibrary(forUserId)
 
   function exercisesForSection(section) {
     return exercises.filter(e => e.section === section)
@@ -248,6 +244,7 @@ export function WorkoutPlanForm({ createdBy, forUserId, date, existing, existing
         history={library.history}
         isFavorite={library.isFavorite}
         onToggleFavorite={library.toggleFavorite}
+        onManage={onManageLibrary && (() => { setPickerSection(null); onManageLibrary() })}
       />
     </form>
   )
