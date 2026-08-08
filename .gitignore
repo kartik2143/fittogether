@@ -4,3 +4,7 @@ dist
 .env
 
 .DS_Store
+
+# Contain a Supabase service-role key — never commit
+seed-*.mjs
+.claude/

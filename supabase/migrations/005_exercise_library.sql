@@ -32,3 +32,57 @@ CREATE TABLE IF NOT EXISTS public.hidden_exercises (
 -- deduped on lowercased names, so "Push Ups" and "push ups" are one entry.
 CREATE UNIQUE INDEX IF NOT EXISTS hidden_exercises_user_name_idx
   ON public.hidden_exercises (user_id, lower(exercise_name));
+
+CREATE INDEX IF NOT EXISTS hidden_exercises_user_idx
+  ON public.hidden_exercises (user_id);
+
+-- ────────────────────────────────────────────────
+-- RLS — owner, plus their coach (a coach edits the member's library from the
+-- member's workout page, so every policy mirrors the is_my_member() pattern
+-- already used for logs in 003_coach_write_access.sql).
+-- ────────────────────────────────────────────────
+ALTER TABLE public.favorite_exercises ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.hidden_exercises   ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "favorite_exercises_select" ON public.favorite_exercises;
+CREATE POLICY "favorite_exercises_select"
+  ON public.favorite_exercises FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid() OR public.is_my_member(user_id));
+
+DROP POLICY IF EXISTS "favorite_exercises_insert" ON public.favorite_exercises;
+CREATE POLICY "favorite_exercises_insert"
+  ON public.favorite_exercises FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid() OR public.is_my_member(user_id));
+
+DROP POLICY IF EXISTS "favorite_exercises_update" ON public.favorite_exercises;
+CREATE POLICY "favorite_exercises_update"
+  ON public.favorite_exercises FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid() OR public.is_my_member(user_id))
+  WITH CHECK (user_id = auth.uid() OR public.is_my_member(user_id));
+
+DROP POLICY IF EXISTS "favorite_exercises_delete" ON public.favorite_exercises;
+CREATE POLICY "favorite_exercises_delete"
+  ON public.favorite_exercises FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid() OR public.is_my_member(user_id));
+
+DROP POLICY IF EXISTS "hidden_exercises_select" ON public.hidden_exercises;
+CREATE POLICY "hidden_exercises_select"
+  ON public.hidden_exercises FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid() OR public.is_my_member(user_id));
+
+DROP POLICY IF EXISTS "hidden_exercises_insert" ON public.hidden_exercises;
+CREATE POLICY "hidden_exercises_insert"
+  ON public.hidden_exercises FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid() OR public.is_my_member(user_id));
+
+DROP POLICY IF EXISTS "hidden_exercises_delete" ON public.hidden_exercises;
+CREATE POLICY "hidden_exercises_delete"
+  ON public.hidden_exercises FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid() OR public.is_my_member(user_id));

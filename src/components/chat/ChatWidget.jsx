@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 import { todayStr } from '../../utils/dateUtils'
 
 export function ChatWidget() {
@@ -33,13 +34,23 @@ export function ChatWidget() {
     setLoading(true)
 
     try {
+      // The server identifies the user from this token, so a missing session
+      // means there is nothing useful to send.
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setMessages(prev => [...prev, { role: 'model', text: 'Your session expired — please sign in again.' }])
+        setLoading(false)
+        return
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           messages: newMessages,
-          userId: profile.user_id,
-          userName: profile.display_name,
           today: todayStr(),
         }),
       })

@@ -25,7 +25,7 @@ const tools = [{
     },
     {
       name: 'get_profile',
-      description: 'Get profile details for a user: name, height, supplements list, coach info.',
+      description: 'Get profile details for a user: name, coach status, and their registered supplements list.',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -137,14 +137,13 @@ const tools = [{
           target_sets: { type: 'NUMBER' },
           target_reps: { type: 'NUMBER' },
           target_weight_kg: { type: 'NUMBER' },
-          notes: { type: 'STRING' },
         },
         required: ['plan_id', 'exercise_name', 'section', 'target_sets'],
       },
     },
     {
       name: 'update_exercise',
-      description: 'Update an existing exercise (sets, reps, weight, notes, name).',
+      description: 'Update an existing exercise (sets, reps, weight, name, section).',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -153,7 +152,6 @@ const tools = [{
           target_sets: { type: 'NUMBER' },
           target_reps: { type: 'NUMBER' },
           target_weight_kg: { type: 'NUMBER' },
-          notes: { type: 'STRING' },
           section: { type: 'STRING' },
         },
         required: ['exercise_id'],
@@ -306,7 +304,7 @@ async function runTool(name, args, requesterId, allowed, today) {
     case 'get_profile': {
       if (!allowed.has(args.user_id)) return { error: 'Access denied.' }
       const [{ data: profile }, { data: supps }] = await Promise.all([
-        supabase.from('profiles').select('display_name, is_coach, height_cm, date_of_birth').eq('user_id', args.user_id).single(),
+        supabase.from('profiles').select('display_name, is_coach').eq('user_id', args.user_id).single(),
         supabase.from('supplement_list').select('name').eq('user_id', args.user_id).order('order_index'),
       ])
       return { profile, supplements: supps?.map(s => s.name) || [] }
@@ -444,7 +442,6 @@ async function runTool(name, args, requesterId, allowed, today) {
           target_sets: args.target_sets,
           target_reps: args.target_reps || null,
           target_weight_kg: args.target_weight_kg || null,
-          notes: args.notes || null,
           order_index: nextOrder,
         })
         .select('id')
@@ -461,7 +458,6 @@ async function runTool(name, args, requesterId, allowed, today) {
       if (args.target_sets !== undefined) updates.target_sets = args.target_sets
       if (args.target_reps !== undefined) updates.target_reps = args.target_reps
       if (args.target_weight_kg !== undefined) updates.target_weight_kg = args.target_weight_kg
-      if (args.notes !== undefined) updates.notes = args.notes
       if (args.section !== undefined) updates.section = args.section
       const { error } = await supabase
         .from('workout_exercises')
@@ -495,20 +491,45 @@ async function runTool(name, args, requesterId, allowed, today) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { messages, userId, userName, today } = req.body
-  if (!messages || !userId) return res.status(400).json({ error: 'Missing required fields' })
+  const { messages, today } = req.body
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'Missing required fields' })
+  }
+  // Cap the transcript: this is an unauthenticated-until-verified entry point
+  // and every message is forwarded to the model.
+  if (messages.length > 60) return res.status(413).json({ error: 'Conversation too long' })
+
+  // Identity comes from the verified access token, never from the body — a
+  // caller supplying someone else's user_id would otherwise inherit their
+  // whole data scope, since the allow-set below is derived from it.
+  const authHeader = req.headers.authorization || ''
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null
+  if (!token) return res.status(401).json({ error: 'Not signed in.' })
+
+  const { data: authData, error: authError } = await supabase.auth.getUser(token)
+  if (authError || !authData?.user) return res.status(401).json({ error: 'Session expired — please sign in again.' })
+  const userId = authData.user.id
+
+  // Dates drive every per-day query; reject anything that isn't YYYY-MM-DD.
+  const todayDate = /^\d{4}-\d{2}-\d{2}$/.test(today || '')
+    ? today
+    : new Date().toISOString().slice(0, 10)
 
   try {
-  // Build access control + load today's context in parallel
-  const [allowed, context] = await Promise.all([
+  // Build access control + load today's context in parallel. The display name
+  // is read from the profile rather than the body for the same reason as the
+  // id: nothing the caller asserts about themselves is trusted.
+  const [allowed, context, { data: me }] = await Promise.all([
     buildAllowedIds(userId),
-    loadContext(userId, today),
+    loadContext(userId, todayDate),
+    supabase.from('profiles').select('display_name').eq('user_id', userId).maybeSingle(),
   ])
   const isCoach = allowed.size > 1
+  const userName = me?.display_name || 'there'
 
   const systemPrompt = `You are FitTogether's AI fitness assistant — concise, practical, and action-oriented.
 
-Today's date: ${today}
+Today's date: ${todayDate}
 User: ${userName} (${isCoach ? 'Coach' : 'Member'}, user_id: ${userId})
 ${isCoach ? 'As a coach you can manage workout plans and read data for your members. Use list_members to find a member\'s user_id when they refer to someone by name.' : ''}
 
@@ -555,7 +576,7 @@ Keep responses short. No markdown headers. Bullet points are fine.`
         calls.map(async call => ({
           functionResponse: {
             name: call.name,
-            response: await runTool(call.name, call.args, userId, allowed, today),
+            response: await runTool(call.name, call.args, userId, allowed, todayDate),
           },
         }))
       )
